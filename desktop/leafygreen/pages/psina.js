@@ -1,6 +1,6 @@
-import { PsinaPage } from '[%#payload.baseUrl%]/shared/pages/psina.js';
-import { html } from '[%#globalThis.location.origin%]/shared/template.js';
-import { css } from '[%#globalThis.location.origin%]/shared/element/styles/css.js';
+import { PsinaPage } from '[%#payload.baseExtensionUrl%]/shared/pages/psina.js';
+import { html } from '[%#ctx.ppp.rootUrl%]/shared/template.js';
+import { css } from '[%#ctx.ppp.rootUrl%]/shared/element/styles/css.js';
 
 export const psinaPageTemplate = (context, definition) => html`
   <template>
