@@ -4,7 +4,7 @@ import { css } from '[%#globalThis.location.origin%]/shared/element/styles/css.j
 
 export const psinaPageTemplate = (context, definition) => html`
   <template>
-    <${'ppp-page-header'}>Psina (work in progress, not ready yet!)</ppp-page-header>
+    <${'ppp-page-header'}>Psina (work in progress, not ready yet)</ppp-page-header>
   </template>
 `;
 
