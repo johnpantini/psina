@@ -112,7 +112,7 @@ export class PsinaPage extends BasePage {
 
       await this.fetchPsinaKeys();
 
-      if (this.psinaKeys.pusherApi) {
+      if (this.psinaKeys?.pusherApi) {
         await this.connectToPusher({
           key: this.psinaKeys.pusherApi.key,
           cluster: this.psinaKeys.pusherApi.cluster
