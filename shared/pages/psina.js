@@ -550,6 +550,14 @@ export class PsinaPage extends BasePage {
       });
     }
 
+    if (positions.length === 0) {
+      throw new ValidationError({
+        element: this.app.toast,
+        status: 404,
+        message: 'Свободный баланс портфеля должен составлять не менее $1000.'
+      });
+    }
+
     if (positions[0].symbol === 'USD' && positions[0].qty >= 1000) {
       return refreshToken;
     }
