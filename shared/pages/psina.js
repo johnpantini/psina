@@ -540,7 +540,9 @@ export class PsinaPage extends BasePage {
       'Не удаётся получить позиции. Убедитесь, что портфель верный.'
     );
 
-    const positions = (await positionsRequest.json())?.filter((p) => p.qty > 0);
+    const positions = (await positionsRequest.json())?.filter(
+      (p) => p.qty !== 0
+    );
 
     if (positions.length > 1) {
       throw new ValidationError({
