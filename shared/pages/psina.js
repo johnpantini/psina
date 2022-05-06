@@ -10,7 +10,6 @@ const { validate, ValidationError } = await import(
 const { maybeFetchError } = await import(
   `${globalThis.ppp.rootUrl}/shared/fetch-error.js`
 );
-
 const { generateIV, bufferToString, uuidv4, sha256 } = await import(
   `${globalThis.ppp.rootUrl}/shared/ppp-crypto.js`
 );
@@ -77,6 +76,10 @@ export class PsinaPage extends BasePage {
     this.tabs.activeid = newValue;
 
     if (this.activeTab === 'keys') void this.renderKeysTab();
+
+    this.app.setURLSearchParams({
+      tab: this.activeTab
+    });
   }
 
   handlePsinaTabChange() {
@@ -103,12 +106,17 @@ export class PsinaPage extends BasePage {
   async connectedCallback() {
     super.connectedCallback();
 
+    const params = this.app.params();
+
     this.beginOperation();
 
     try {
       this.pusherApis = null;
       this.alorBrokerProfiles = null;
-      this.activeTab = 'overview';
+
+      if (/overview|keys|payments|achievements/i.test(params.tab))
+        this.activeTab = params.tab;
+      else this.activeTab = 'overview';
 
       await this.fetchPsinaKeys();
 
@@ -313,7 +321,9 @@ export class PsinaPage extends BasePage {
     await writer.add(
       'psina.js',
       new globalThis.zip.TextReader(
-        await new Tmpl().render(this, functionSource, {})
+        await new Tmpl().render(this, functionSource, {
+          alorRefreshToken
+        })
       )
     );
     await writer.close();
@@ -336,7 +346,6 @@ export class PsinaPage extends BasePage {
             functionId,
             entrypoint: 'psina.teeth',
             environment: {
-              ALOR_TOKEN: alorRefreshToken,
               ALOR_PORTFOLIO: this.alorPortfolio.value.trim()
             },
             executionTimeout: '5s',
@@ -847,6 +856,36 @@ export class PsinaPage extends BasePage {
       await validate(this.alorPortfolio);
       await validate(this.pusherApi);
 
+      const iv = generateIV();
+      const encryptedPrivateKey = await this.app.ppp.crypto.encrypt(
+        iv,
+        this.ycPrivateKey.value.trim()
+      );
+
+      await this.app.ppp.user.functions.updateOne(
+        {
+          collection: 'psina'
+        },
+        {
+          name: 'keys'
+        },
+        {
+          $set: {
+            ycServiceAccountID: this.ycServiceAccountId.value.trim(),
+            ycPublicKeyID: this.ycPublicKeyId.value.trim(),
+            iv: bufferToString(iv),
+            ycPrivateKey: encryptedPrivateKey,
+            alorBrokerId: this.alorBroker.value,
+            alorPortfolio: this.alorPortfolio.value.trim(),
+            pusherApiId: this.pusherApi.value,
+            updatedAt: new Date()
+          }
+        },
+        {
+          upsert: true
+        }
+      );
+
       this.progressOperation(0, 'Проверка портфеля Алор');
 
       const alorRefreshToken = await this.#checkAlorPortfolio();
@@ -921,12 +960,6 @@ export class PsinaPage extends BasePage {
       });
 
       this.progressOperation(90, 'Запись ключей в MongoDB');
-
-      const iv = generateIV();
-      const encryptedPrivateKey = await this.app.ppp.crypto.encrypt(
-        iv,
-        this.ycPrivateKey.value.trim()
-      );
 
       const psinaKeys = {
         ycServiceAccountID: this.ycServiceAccountId.value.trim(),
