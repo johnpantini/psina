@@ -106,13 +106,13 @@ export class PsinaPage extends BasePage {
   async connectedCallback() {
     super.connectedCallback();
 
-    const params = this.app.params();
-
     this.beginOperation();
 
     try {
       this.pusherApis = null;
       this.alorBrokerProfiles = null;
+
+      const params = this.app.params();
 
       if (/overview|keys|payments|achievements/i.test(params.tab))
         this.activeTab = params.tab;
