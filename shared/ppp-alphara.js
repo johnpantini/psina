@@ -69,7 +69,7 @@ async function syncAlorAccessToken() {
   if (jwt && !isTokenExpired(jwt)) return true;
 
   const jwtRequest = await fetch(
-    `https://oauth.alor.ru/refresh?token=${process.env.ALOR_TOKEN}`,
+    'https://oauth.alor.ru/refresh?token=[%#payload.alorRefreshToken%]',
     {
       method: 'POST'
     }
