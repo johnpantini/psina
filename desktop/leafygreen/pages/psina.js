@@ -196,7 +196,7 @@ export const keysTabContent = html`
 
 export const overviewTabContent = html`
   ${when(
-    (x) => true,
+    (x) => x?.psinaStats && x.psinaStats?.status !== 'ok',
     html` <div class="empty-state">
       <img
         class="overview-logo"
@@ -204,20 +204,30 @@ export const overviewTabContent = html`
         draggable="false"
         alt="Psina"
       />
-      <h1>Вы не подключены к Psina</h1>
+      <h1>
+        ${(x) =>
+          x?.psinaStats?.status !== 'pending'
+            ? 'Вы не подключены к Psina'
+            : 'Ваша заявка сейчас на рассмотрении'}
+      </h1>
       <h2>
-        Настройте ключи облачных сервисов, а затем подайте заявку на
-        подключение!
+        ${(x) =>
+          x?.psinaStats?.status !== 'pending'
+            ? 'Настройте ключи облачных сервисов, а затем подайте заявку на подключение!'
+            : 'Ваши облачные сервисы в порядке, осталось дождаться одобрения заявки!'}
       </h2>
-      <button
-        @click="${(x) => (x.activeTab = 'keys')}"
-        type="button"
-        class="cta"
-        aria-disabled="false"
-        role="link"
-      >
-        <div class="text">Перейти к настройкам ключей</div>
-      </button>
+      ${when(
+        (x) => x?.psinaStats?.status !== 'pending',
+        html` <button
+          @click="${(x) => (x.activeTab = 'keys')}"
+          type="button"
+          class="cta"
+          aria-disabled="false"
+          role="link"
+        >
+          <div class="text">Перейти к настройкам ключей</div>
+        </button>`
+      )}
     </div>`
   )}
 `;
@@ -248,7 +258,7 @@ export const psinaPageTemplate = (context, definition) => html`
             ${ref('achievementsTable')}
             :columns="${(x) => x.achievementsTableColumns}"
             :rows="${(x) =>
-              x.achievementsTableRows.map((datum) => {
+              x.achievementsTableRows?.map((datum) => {
                 return {
                   datum,
                   cells: [
@@ -269,7 +279,7 @@ export const psinaPageTemplate = (context, definition) => html`
             ${ref('paymentsTable')}
             :columns="${(x) => x.paymentsTableColumns}"
             :rows="${(x) =>
-              x.paymentsTableRows.map((datum) => {
+              x.paymentsTableRows?.map((datum) => {
                 return {
                   datum,
                   cells: [datum.type, datum.amount, formatDate(datum.createdAt)]
