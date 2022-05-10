@@ -44,7 +44,8 @@ export class PsinaPage extends BasePage {
   @observable
   psinaStats;
 
-  achievementsTableRows = [];
+  @observable
+  achievementsTableRows;
 
   achievementsTableColumns = [
     {
@@ -58,7 +59,8 @@ export class PsinaPage extends BasePage {
     }
   ];
 
-  paymentsTableRows = [];
+  @observable
+  paymentsTableRows;
 
   paymentsTableColumns = [
     {
@@ -76,6 +78,8 @@ export class PsinaPage extends BasePage {
     this.tabs.activeid = newValue;
 
     if (this.activeTab === 'keys') void this.renderKeysTab();
+
+    if (this.activeTab === 'overview') void this.fetchPsinaStats();
 
     this.app.setURLSearchParams({
       tab: this.activeTab
@@ -97,8 +101,9 @@ export class PsinaPage extends BasePage {
       });
 
       this.pusherConnection.subscribe('psina').bind('message', (data) => {
-        // TODO
-        console.log(data);
+        if (data?.message === 'stats') {
+          void this.fetchPsinaStats();
+        }
       });
     }
   }
@@ -118,6 +123,7 @@ export class PsinaPage extends BasePage {
         this.activeTab = params.tab;
       else this.activeTab = 'overview';
 
+      // For cross-tab Pusher connection
       await this.fetchPsinaKeys();
 
       if (this.psinaKeys?.pusherApi) {
@@ -128,7 +134,6 @@ export class PsinaPage extends BasePage {
       }
     } catch (e) {
       this.failOperation(e);
-      await this.notFound();
     } finally {
       this.endOperation();
     }
@@ -175,6 +180,32 @@ export class PsinaPage extends BasePage {
     }
 
     Observable.notify(this, 'psinaKeys');
+  }
+
+  async fetchPsinaStats() {
+    this.beginOperation();
+
+    try {
+      [this.psinaStats] = await this.app.ppp.user.functions.aggregate(
+        {
+          collection: 'psina'
+        },
+        [
+          {
+            $match: {
+              name: 'stats'
+            }
+          }
+        ]
+      );
+
+      Observable.notify(this, 'psinaStats');
+    } catch (e) {
+      this.failOperation(e);
+      await this.notFound();
+    } finally {
+      this.endOperation();
+    }
   }
 
   async renderKeysTab() {
@@ -815,9 +846,6 @@ export class PsinaPage extends BasePage {
           )
         ).text(),
         {
-          mongoLocationUrl: this.app.ppp.keyVault.getKey('mongo-location-url'),
-          mongoAppId: this.app.ppp.keyVault.getKey('mongo-app-client-id'),
-          endpointSuffix,
           alpharaId,
           betaraId,
           gammaraId
