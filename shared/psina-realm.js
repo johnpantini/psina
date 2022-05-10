@@ -1,4 +1,4 @@
-exports = async function ({ query, headers, body }, response) {
+exports = function ({ query, headers, body }, response) {
   try {
     const payload = EJSON.parse(body.text());
 
@@ -10,6 +10,7 @@ exports = async function ({ query, headers, body }, response) {
       return '422 Unprocessable Entity';
     }
   } catch (e) {
+    console.error(e);
     response.setStatusCode(500);
 
     return '500 Internal Server Error';

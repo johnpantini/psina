@@ -1,4 +1,4 @@
-exports = function ({ query, headers, body }, response) {
+exports = async function ({ query, headers, body }, response) {
   try {
     const payload = EJSON.parse(body.text());
 
@@ -28,7 +28,7 @@ exports = function ({ query, headers, body }, response) {
 
       params += `&auth_signature=${authSignature}`;
 
-      context.http.post({
+      await context.http.post({
         url: `https://api-${pusherCredentials.cluster}.pusher.com/apps/${pusherCredentials.appid}/events?${params}`,
         body: pusherBody,
         headers: {
@@ -43,6 +43,7 @@ exports = function ({ query, headers, body }, response) {
       return '422 Unprocessable Entity';
     }
   } catch (e) {
+    console.error(e);
     response.setStatusCode(500);
 
     return '500 Internal Server Error';
