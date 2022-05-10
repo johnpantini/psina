@@ -196,7 +196,7 @@ export const keysTabContent = html`
 
 export const overviewTabContent = html`
   ${when(
-    (x) => x?.psinaStats && x.psinaStats?.status !== 'ok',
+    (x) => x?.psinaStats?.status !== 'ok',
     html` <div class="empty-state">
       <img
         class="overview-logo"
