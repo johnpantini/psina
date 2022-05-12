@@ -1022,6 +1022,8 @@ export class PsinaPage extends BasePage {
         }
       );
 
+      psinaKeys.ycPrivateKey = this.ycPrivateKey.value.trim();
+
       this.psinaKeys = psinaKeys;
       this.succeedOperation();
     } catch (e) {
