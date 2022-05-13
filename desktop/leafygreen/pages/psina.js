@@ -197,38 +197,110 @@ export const keysTabContent = html`
 export const overviewTabContent = html`
   ${when(
     (x) => !x.busy && x?.psinaStats?.status !== 'ok',
-    html` <div class="empty-state">
-      <img
-        class="overview-logo"
-        src="static/cloud-functions.svg"
-        draggable="false"
-        alt="Psina"
-      />
-      <h1>
-        ${(x) =>
-          x?.psinaStats?.status !== 'pending'
-            ? 'Вы не подключены к Psina'
-            : 'Ваша заявка сейчас на рассмотрении'}
-      </h1>
-      <h2>
-        ${(x) =>
-          x?.psinaStats?.status !== 'pending'
-            ? 'Настройте ключи облачных сервисов, а затем подайте заявку на подключение!'
-            : 'Ваши облачные сервисы в порядке, осталось дождаться одобрения заявки!'}
-      </h2>
-      ${when(
-        (x) => x?.psinaStats?.status !== 'pending',
-        html` <button
-          @click="${(x) => (x.activeTab = 'keys')}"
-          type="button"
-          class="cta"
-          aria-disabled="false"
-          role="link"
-        >
-          <div class="text">Перейти к настройкам ключей</div>
-        </button>`
-      )}
-    </div>`
+    html`
+      <div class="empty-state">
+        <img
+          class="overview-logo"
+          src="static/cloud-functions.svg"
+          draggable="false"
+          alt="Psina"
+        />
+        <h1>
+          ${(x) =>
+            x?.psinaStats?.status !== 'pending'
+              ? 'Вы не подключены к Psina'
+              : 'Ваша заявка сейчас на рассмотрении'}
+        </h1>
+        <h2>
+          ${(x) =>
+            x?.psinaStats?.status !== 'pending'
+              ? 'Настройте ключи облачных сервисов, а затем подайте заявку на подключение!'
+              : 'Ваши облачные сервисы в порядке, осталось дождаться одобрения заявки!'}
+        </h2>
+        ${when(
+          (x) => x?.psinaStats?.status !== 'pending',
+          html`
+            <button
+              @click="${(x) => (x.activeTab = 'keys')}"
+              type="button"
+              class="cta"
+              aria-disabled="false"
+              role="link"
+            >
+              <div class="text">Перейти к настройкам ключей</div>
+            </button>
+          `
+        )}
+      </div>
+    `
+  )}
+  ${when(
+    (x) => x?.psinaStats?.status === 'ok',
+    html`
+      <div class="section-content horizontal-overflow">
+        <div class="service-details">
+          <div class="service-details-controls">
+            <div class="service-details-control service-details-label">
+              Psina
+            </div>
+            <div
+              class="service-details-control"
+              style="justify-content: left"
+            >
+              <${'ppp-button'}
+                disabled
+              >
+                Зарезервировано
+              </ppp-button>
+            </div>
+            <div class="service-details-control">
+              <${'ppp-badge'} appearance="green">
+                Портфель под управлением
+              </ppp-badge>
+            </div>
+          </div>
+          <div class="service-details-info">
+            <div class="service-details-info-container">
+                    <span style="grid-column-start: 1;grid-row-start: 1;">
+                      Портфель
+                    </span>
+              <div style="grid-column-start: 1;grid-row-start: 2;">
+                ${(x) => x?.psinaKeys?.alorPortfolio}
+              </div>
+              <span style="grid-column-start: 2;grid-row-start: 1;">
+                    Баланс Psina
+                    </span>
+              <div class="balance-holder"
+                   appearance="${(x) => x.getBalanceAppearance()}"
+                   style="grid-column-start: 2;grid-row-start: 2;">
+                ${(x) => x.formatRUB(x.getBalance())}
+              </div>
+              <span style="grid-column-start: 3;grid-row-start: 1;">
+                    Прибыль за день
+                    </span>
+              <div class="balance-holder"
+                   appearance="${(x) => x.getBalanceAppearance(0)}"
+                   style="grid-column-start: 3;grid-row-start: 2;">
+                ${(x) => x.formatUSD(0)}
+              </div>
+              <span style="grid-column-start: 4;grid-row-start: 1;">
+                    Сделок за день
+                    </span>
+              <div style="grid-column-start: 4;grid-row-start: 2;">
+                ${(x) => 0}
+              </div>
+              <span style="grid-column-start: 5;grid-row-start: 1;">
+                    Из них до 100 лотов
+                    </span>
+              <div appearance="good"
+                   style="grid-column-start: 5;grid-row-start: 2;">
+                ${(x) => '0/150'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
   )}
 `;
 
@@ -328,6 +400,14 @@ export const psinaPageStyles = (context, definition) => css`
     margin: 30px 0;
     width: 372px;
     height: 174px;
+  }
+
+  div[appearance='good'] {
+    color: rgb(19, 170, 82);
+  }
+
+  div[appearance='bad'] {
+    color: rgb(151, 6, 6);
   }
 `;
 

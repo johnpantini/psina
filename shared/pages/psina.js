@@ -90,6 +90,32 @@ export class PsinaPage extends BasePage {
     this.activeTab = this.tabs.activetab.id;
   }
 
+  formatRUB(amount) {
+    return amount.toLocaleString('ru-RU', {
+      style: 'currency',
+      currency: 'RUB'
+    });
+  }
+
+  formatUSD(amount) {
+    return amount.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    });
+  }
+
+  getBalance() {
+    if (this.psinaStats?.balance) {
+      return this.psinaStats.balance / 100;
+    } else return 0;
+  }
+
+  getBalanceAppearance(balance = this.getBalance()) {
+    if (balance < 0) return 'bad';
+    else if (balance > 0) return 'good';
+    else return 'neutral';
+  }
+
   async connectToPusher({ key, cluster }) {
     await import(
       `${globalThis.ppp.rootUrl}/vendor/pusher-with-encryption.min.js`
