@@ -71,6 +71,9 @@ export class PsinaPage extends BasePage {
     },
     {
       label: 'Дата'
+    },
+    {
+      label: 'Баланс Psina после платежа'
     }
   ];
 
@@ -78,8 +81,8 @@ export class PsinaPage extends BasePage {
     this.tabs.activeid = newValue;
 
     if (this.activeTab === 'keys') void this.renderKeysTab();
-
-    if (this.activeTab === 'overview') void this.fetchPsinaStats();
+    else if (this.activeTab === 'overview') void this.fetchPsinaStats();
+    else if (this.activeTab === 'payments') void this.fetchPsinaPayments();
 
     this.app.setURLSearchParams({
       tab: this.activeTab
@@ -105,8 +108,8 @@ export class PsinaPage extends BasePage {
   }
 
   getBalance() {
-    if (this.psinaStats?.balance) {
-      return this.psinaStats.balance / 100;
+    if (this.psinaStats?.psinaBalance) {
+      return this.psinaStats.psinaBalance / 100;
     } else return 0;
   }
 
@@ -129,6 +132,13 @@ export class PsinaPage extends BasePage {
       this.pusherConnection.subscribe('psina').bind('message', (data) => {
         if (data?.message === 'stats') {
           void this.fetchPsinaStats();
+        } else if (data?.message === 'psina-balance') {
+          if (this.psinaStats) this.psinaStats.psinaBalance = data.balance;
+
+          Observable.notify(this, 'psinaStats');
+
+          if (this.activeTab === 'payments')
+            void this.fetchPsinaPayments();
         }
       });
     }
@@ -142,6 +152,8 @@ export class PsinaPage extends BasePage {
     try {
       this.pusherApis = null;
       this.alorBrokerProfiles = null;
+      this.paymentsTableRows = [];
+      this.achievementsTableRows = [];
 
       const params = this.app.params();
 
@@ -228,7 +240,22 @@ export class PsinaPage extends BasePage {
       Observable.notify(this, 'psinaStats');
     } catch (e) {
       this.failOperation(e);
-      await this.notFound();
+    } finally {
+      this.endOperation();
+    }
+  }
+
+  async fetchPsinaPayments() {
+    this.beginOperation();
+
+    try {
+      this.paymentsTableRows = await this.app.ppp.user.functions.find({
+        collection: 'payments'
+      });
+
+      Observable.notify(this, 'paymentsTableRows');
+    } catch (e) {
+      this.failOperation(e);
     } finally {
       this.endOperation();
     }

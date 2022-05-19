@@ -16,6 +16,10 @@ import { settings } from '[%#ctx.ppp.rootUrl%]/desktop/leafygreen/icons/settings
 import { caretDown } from '[%#ctx.ppp.rootUrl%]/desktop/leafygreen/icons/caret-down.js';
 import ppp from '[%#ctx.ppp.rootUrl%]/ppp.js';
 
+(
+  await import(`[%#payload.baseExtensionUrl%]/i18n/${ppp.locale}/psina.i18n.js`)
+).default(ppp.dict);
+
 export const keysTabContent = html`
   ${when(
     (x) => !x.psinaKeys?.wardenKey,
@@ -304,6 +308,15 @@ export const overviewTabContent = html`
   )}
 `;
 
+export function paymentTypeAppearance(type) {
+  switch (type) {
+    case 'receipt':
+      return 'green';
+  }
+
+  return 'lightgray';
+}
+
 export const psinaPageTemplate = (context, definition) => html`
   <template>
     <${'ppp-page-header'} ${ref('header')}>Центр управления Psina
@@ -354,7 +367,17 @@ export const psinaPageTemplate = (context, definition) => html`
               x.paymentsTableRows?.map((datum) => {
                 return {
                   datum,
-                  cells: [datum.type, datum.amount, formatDate(datum.createdAt)]
+                  cells: [
+                    html`
+                      <${'ppp-badge'}
+                        appearance="${() => paymentTypeAppearance(datum.type)}">
+                        ${() => x.t(`$psina.paymentType.${datum.type}`)}
+                      </ppp-badge>
+                    `,
+                    x.formatRUB(datum.amount / 100),
+                    formatDate(new Date(datum.createdAt)),
+                    x.formatRUB(datum.psinaBalance / 100)
+                  ]
                 };
               })}"
           >
