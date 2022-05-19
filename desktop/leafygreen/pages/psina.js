@@ -364,16 +364,16 @@ export const psinaPageTemplate = (context, definition) => html`
             ${ref('paymentsTable')}
             :columns="${(x) => x.paymentsTableColumns}"
             :rows="${(x) =>
-              x.paymentsTableRows?.map((datum) => {
+              x.paymentsTableRows?.reverse().map((datum) => {
                 return {
                   datum,
                   cells: [
                     html`
-                      <${'ppp-badge'}
-                        appearance="${() => paymentTypeAppearance(datum.type)}">
-                        ${() => x.t(`$psina.paymentType.${datum.type}`)}
-                      </ppp-badge>
-                    `,
+                  <${'ppp-badge'}
+                    appearance="${() => paymentTypeAppearance(datum.type)}">
+                    ${() => x.t(`$psina.paymentType.${datum.type}`)}
+                  </ppp-badge>
+                `,
                     x.formatRUB(datum.amount / 100),
                     formatDate(new Date(datum.createdAt)),
                     x.formatRUB(datum.psinaBalance / 100)
