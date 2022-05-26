@@ -137,8 +137,7 @@ export class PsinaPage extends BasePage {
 
           Observable.notify(this, 'psinaStats');
 
-          if (this.activeTab === 'payments')
-            void this.fetchPsinaPayments();
+          if (this.activeTab === 'payments') void this.fetchPsinaPayments();
         }
       });
     }
@@ -649,18 +648,18 @@ export class PsinaPage extends BasePage {
       throw new ValidationError({
         element: this.app.toast,
         status: 404,
-        message: 'Свободный баланс портфеля должен составлять не менее $1000.'
+        message: 'Свободный баланс портфеля должен составлять не менее $2000.'
       });
     }
 
-    if (positions[0].symbol === 'USD' && positions[0].qty >= 1000) {
+    if (positions[0].symbol === 'USD' && positions[0].qty >= 2000) {
       return refreshToken;
     }
 
     throw new ValidationError({
       element: this.app.toast,
       status: 404,
-      message: 'Свободный баланс портфеля должен составлять не менее $1000.'
+      message: 'Свободный баланс портфеля должен составлять не менее $2000.'
     });
   }
 
@@ -1041,6 +1040,18 @@ export class PsinaPage extends BasePage {
       });
 
       this.progressOperation(90, 'Запись ключей в MongoDB');
+
+      if (!this.app.ppp.keyVault.getKey('mongo-location-url')) {
+        sessionStorage.removeItem('realmLogin');
+
+        // noinspection ExceptionCaughtLocallyJS
+        throw new ValidationError({
+          element: this.app.toast,
+          status: 404,
+          message:
+            'Нет адреса приложения MongoDB Realm. Сохраните ключи облачных сервисов заново.'
+        });
+      }
 
       const psinaKeys = {
         ycServiceAccountID: this.ycServiceAccountId.value.trim(),
