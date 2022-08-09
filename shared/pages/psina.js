@@ -13,7 +13,7 @@ const { maybeFetchError } = await import(
 const { generateIV, bufferToString, uuidv4, sha256 } = await import(
   `${globalThis.ppp.rootUrl}/shared/ppp-crypto.js`
 );
-const { SUPPORTED_BROKERS, SUPPORTED_APIS } = await import(
+const { BROKERS, APIS } = await import(
   `${globalThis.ppp.rootUrl}/shared/const.js`
 );
 const { Tmpl } = await import(`${globalThis.ppp.rootUrl}/shared/tmpl.js`);
@@ -274,7 +274,7 @@ export class PsinaPage extends BasePage {
               $match: {
                 $and: [
                   {
-                    type: SUPPORTED_APIS.PUSHER
+                    type: APIS.PUSHER
                   },
                   {
                     $or: [
@@ -296,7 +296,7 @@ export class PsinaPage extends BasePage {
               $match: {
                 $and: [
                   {
-                    type: SUPPORTED_BROKERS.ALOR_OPENAPI_V2
+                    type: BROKERS.ALOR_OPENAPI_V2
                   },
                   {
                     $or: [
