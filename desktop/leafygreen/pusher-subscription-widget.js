@@ -31,6 +31,17 @@ export async function widgetDefinition({ ppp, baseWidgetUrl }) {
       margin: 0 4px;
     }
 
+    .clickable {
+      color: rgb(1, 107, 248);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .clickable:hover {
+      color: rgb(1, 107, 248);
+      text-decoration: underline;
+    }
+
     ${widgetStyles}
   `;
 

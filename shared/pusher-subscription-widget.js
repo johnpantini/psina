@@ -72,7 +72,12 @@ export const psinaPusherSubscriptionWidgetTemplate = (
               (x) => x.messages ?? [],
               html`
                 <${'ppp-widget-card'}
-                  class=${(x) => (x.pppFromHistory ? '' : 'new')}>
+                  ?clickable="${(x) => typeof x['@click'] !== 'undefined'}"
+                  @click="${(x, c) =>
+                    typeof x['@click'] === 'function'
+                      ? x['@click'](x, c)
+                      : void 0}"
+                  class="${(x) => (x.pppFromHistory ? '' : 'new')}">
                   ${(x) => (x.indicator ? html`${x.indicator}` : '')}
                   ${(x) => (x.iconLayout ? html`${x.iconLayout}` : '')}
                   ${(x) => (x.iconFallback ? html`${x.iconFallback}` : '')}
@@ -190,6 +195,7 @@ export class PsinaPusherSubscriptionWidget extends WidgetWithInstrument {
 
       if (typeof formatted?.id !== 'undefined') {
         if (
+          this.document.disableInstrumentFiltering ||
           !this.instrument ||
           formatted?.symbols?.indexOf?.(
             this.instrumentTrader.getSymbol?.(this.instrument)
@@ -216,7 +222,7 @@ export class PsinaPusherSubscriptionWidget extends WidgetWithInstrument {
     return this.#messageFormatter.call(this, event, message);
   }
 
-  async #trySelectSymbol(symbol, instrumentType) {
+  async trySelectSymbol(symbol, instrumentType) {
     if (!symbol) return;
 
     if (this.instrumentTrader) {
@@ -254,7 +260,7 @@ export class PsinaPusherSubscriptionWidget extends WidgetWithInstrument {
           this.document.autoSelectInstrument &&
           formatted?.symbols?.length === 1
         ) {
-          await this.#trySelectSymbol(
+          await this.trySelectSymbol(
             formatted.symbols[0],
             this.document.instrumentType ?? 'stock'
           );
@@ -264,6 +270,7 @@ export class PsinaPusherSubscriptionWidget extends WidgetWithInstrument {
         formatted = await this.formatMessage(event, message);
 
         if (
+          this.document.disableInstrumentFiltering ||
           !this.instrument ||
           formatted?.symbols?.indexOf?.(
             this.instrumentTrader.getSymbol?.(this.instrument)
@@ -294,6 +301,8 @@ export class PsinaPusherSubscriptionWidget extends WidgetWithInstrument {
         instrumentTraderId: this.container.instrumentTraderId.value,
         formatterCode: this.container.formatterCode.value,
         autoSelectInstrument: this.container.autoSelectInstrument.checked,
+        disableInstrumentFiltering:
+          this.container.disableInstrumentFiltering.checked,
         historyCode: this.container.historyCode.value
       }
     };
@@ -465,21 +474,12 @@ return [];`;
             class="margin-top"
             @click="${(x) => {
               x.formatterCode.updateCode(defaultFormatterCode);
-
               x.formatterCode.$emit('input');
             }}"
             appearance="primary"
           >
             Восстановить значение по умолчанию
           </ppp-button>
-        </div>
-        <div style="margin-top: 8px">
-          <${'ppp-checkbox'}
-            ?checked="${(x) => x.document.autoSelectInstrument}"
-            ${ref('autoSelectInstrument')}
-          >
-            Переключать инструмент при новых сообщениях
-          </${'ppp-checkbox'}>
         </div>
       </div>
       <div class="widget-settings-section">
@@ -507,6 +507,23 @@ return [];`;
             Восстановить значение по умолчанию
           </ppp-button>
         </div>
+      </div>
+      <div class="widget-settings-section">
+        <div class="widget-settings-label-group">
+          <h5>Параметры отображения и работы</h5>
+        </div>
+        <${'ppp-checkbox'}
+          ?checked="${(x) => x.document.autoSelectInstrument}"
+          ${ref('autoSelectInstrument')}
+        >
+          Переключать инструмент при новых сообщениях
+        </${'ppp-checkbox'}>
+        <${'ppp-checkbox'}
+          ?checked="${(x) => x.document.disableInstrumentFiltering}"
+          ${ref('disableInstrumentFiltering')}
+        >
+          Не фильтровать содержимое по выбранному инструменту
+        </${'ppp-checkbox'}>
       </div>
     `
   };
