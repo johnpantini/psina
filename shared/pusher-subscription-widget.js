@@ -213,7 +213,7 @@ export class PsinaPusherSubscriptionWidget extends WidgetWithInstrument {
   async instrumentChanged(oldValue, newValue) {
     super.instrumentChanged(oldValue, newValue);
 
-    if (this.instrumentTrader) {
+    if (this.instrumentTrader && !this.document.disableInstrumentFiltering) {
       await this.#historyRequest();
     }
   }
