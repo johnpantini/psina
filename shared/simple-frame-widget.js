@@ -26,13 +26,16 @@ export const psinaSimpleFrameWidgetTemplate = (context, definition) => html`
             <span>${(x) => x.document?.name ?? ''}</span>
           </div>
           <div class="widget-header-controls">
-            <img
-              draggable="false"
-              alt="Закрыть"
+            <div
+              style="background-image:url('static/widgets/settings.svg')"
               class="widget-close-button"
-              src="static/widgets/close.svg"
+              @click="${(x) => x.goToSettings()}"
+            ></div>
+            <div
+              style="background-image:url('static/widgets/close.svg')"
+              class="widget-close-button"
               @click="${(x) => x.close()}"
-            />
+            ></div>
           </div>
         </div>
       </div>
@@ -48,12 +51,14 @@ export const psinaSimpleFrameWidgetTemplate = (context, definition) => html`
         )}
         ${when(
           (x) => x.document.frameUrl,
-          html` <iframe
-            src="${(x) => x.document.frameUrl}"
-            width="100%"
-            height="100%"
-            style="background: transparent; border: none;"
-          ></iframe>`
+          html`
+            <iframe
+              src="${(x) => x.document.frameUrl}"
+              width="100%"
+              height="100%"
+              style="background: transparent; border: none;"
+            ></iframe>
+          `
         )}
       </div>
     </div>
