@@ -225,7 +225,7 @@ export class PsinaPusherSubscriptionWidget extends WidgetWithInstrument {
     return this.#messageFormatter.call(this, event, message);
   }
 
-  async trySelectSymbol(symbol, instrumentType) {
+  async trySelectSymbol(symbol) {
     if (!symbol) return;
 
     if (this.instrumentTrader) {
@@ -238,14 +238,25 @@ export class PsinaPusherSubscriptionWidget extends WidgetWithInstrument {
       this.topLoader.start();
 
       try {
-        await this.findAndSelectSymbol(
-          {
-            type: instrumentType,
-            symbol,
-            exchange: this.instrumentTrader.getExchange()
-          },
-          true
+        const instrument = await this.instrumentTrader.findInstrumentInCache(
+          symbol
         );
+
+        if (instrument) {
+          await this.findAndSelectSymbol(
+            {
+              type: instrument.type,
+              symbol,
+              exchange: {
+                $in:
+                  this.instrumentTrader.getExchange() ??
+                  instrument.exchange ??
+                  []
+              }
+            },
+            true
+          );
+        }
       } catch (e) {
         console.log(e);
       } finally {
@@ -263,10 +274,7 @@ export class PsinaPusherSubscriptionWidget extends WidgetWithInstrument {
           this.document.autoSelectInstrument &&
           formatted?.symbols?.length === 1
         ) {
-          await this.trySelectSymbol(
-            formatted.symbols[0],
-            this.document.instrumentType ?? 'stock'
-          );
+          await this.trySelectSymbol(formatted.symbols[0]);
         }
 
         // Possible icon change
