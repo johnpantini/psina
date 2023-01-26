@@ -75,7 +75,7 @@ export const psinaPusherSubscriptionWidgetTemplate = (
               (x) => x.messages ?? [],
               html`
                 <${'ppp-widget-card'}
-                  ?clickable="${(x) => typeof x['@click'] !== 'undefined'}"
+                  ?clickable="${(x) => typeof x['@click'] === 'function'}"
                   @click="${(x, c) =>
                     typeof x['@click'] === 'function'
                       ? x['@click'](x, c)
