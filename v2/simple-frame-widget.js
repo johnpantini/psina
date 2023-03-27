@@ -68,6 +68,7 @@ export async function widgetDefinition() {
       template: simpleFrameWidgetTemplate,
       styles: simpleFrameWidgetStyles
     }).define(),
+    minWidth: 150,
     minHeight: 120,
     defaultWidth: 600,
     defaultHeight: 512
