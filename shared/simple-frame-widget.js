@@ -70,7 +70,7 @@ export class PsinaSimpleFrameWidget extends Widget {
     await validate(this.container.frameUrl);
   }
 
-  async update() {
+  async submit() {
     return {
       $set: {
         frameUrl: this.container.frameUrl.value
