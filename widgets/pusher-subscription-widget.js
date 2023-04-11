@@ -1,5 +1,5 @@
 export async function widgetDefinition({ ppp, baseWidgetUrl }) {
-  if (location.origin.endsWith('.dev')) {
+  if (location.origin.endsWith('johnpantini.pages.dev') || location.origin.endsWith('johnpantini.github.io.dev')) {
     return (await import('../v2/pusher-subscription-widget.js'))
       .widgetDefinition();
   } else {
