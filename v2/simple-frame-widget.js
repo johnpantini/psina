@@ -7,12 +7,17 @@ const [
   {
     paletteWhite,
     paletteBlack,
+    paletteGrayBase,
     paletteGrayLight1,
     paletteGrayLight2,
+    paletteGrayLight3,
     paletteGrayDark1,
     paletteGrayDark2,
+    paletteGrayDark3,
+    paletteGrayDark4,
     paletteBlueBase,
     paletteBlueLight2,
+    scrollBarSize,
     positive,
     negative,
     bodyFont,
@@ -105,12 +110,17 @@ export class SimpleFrameWidget extends WidgetWithInstrument {
             darkMode: ppp.darkMode,
             paletteWhite: paletteWhite.$value,
             paletteBlack: paletteBlack.$value,
+            paletteGrayBase: paletteGrayBase.$value,
             paletteGrayLight1: paletteGrayLight1.$value,
             paletteGrayLight2: paletteGrayLight2.$value,
+            paletteGrayLight3: paletteGrayLight3.$value,
             paletteGrayDark1: paletteGrayDark1.$value,
             paletteGrayDark2: paletteGrayDark2.$value,
+            paletteGrayDark3: paletteGrayDark3.$value,
+            paletteGrayDark4: paletteGrayDark4.$value,
             paletteBlueBase: paletteBlueBase.$value,
             paletteBlueLight2: paletteBlueLight2.$value,
+            scrollBarSize: scrollBarSize.$value,
             positive: positive.$value,
             negative: negative.$value,
             bodyFont: bodyFont.$value,
@@ -124,7 +134,7 @@ export class SimpleFrameWidget extends WidgetWithInstrument {
           !this.preview &&
           this.instrumentTrader
         ) {
-          this.selectInstrument(detail);
+          this.selectInstrument(detail.replace('.', ' '));
         }
       }
     }
