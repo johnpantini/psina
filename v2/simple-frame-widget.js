@@ -2,6 +2,7 @@ const [
   { WidgetWithInstrument, widget },
   { css, html, ref, when },
   { validate, invalidate },
+  { Tmpl },
   { WIDGET_TYPES },
   { normalize },
   {
@@ -27,10 +28,12 @@ const [
   import(`${ppp.rootUrl}/elements/widget.js`),
   import(`${ppp.rootUrl}/vendor/fast-element.min.js`),
   import(`${ppp.rootUrl}/lib/ppp-errors.js`),
+  import(`${ppp.rootUrl}/lib/tmpl.js`),
   import(`${ppp.rootUrl}/lib/const.js`),
   import(`${ppp.rootUrl}/design/styles.js`),
   import(`${ppp.rootUrl}/design/design-tokens.js`),
   import(`${ppp.rootUrl}/elements/button.js`),
+  import(`${ppp.rootUrl}/elements/snippet.js`),
   import(`${ppp.rootUrl}/elements/text-field.js`),
   import(`${ppp.rootUrl}/elements/query-select.js`)
 ]);
@@ -100,13 +103,20 @@ export class SimpleFrameWidget extends WidgetWithInstrument {
     window.removeEventListener('message', this.onWindowMessage);
   }
 
-  onWindowMessage(e) {
+  async onWindowMessage(e) {
     if (typeof e.data === 'object' && e.data?.origin === 'ppp-simple-frame') {
       const { detail, event } = e.data;
 
       if (event === 'ready') {
         this.shadowRoot.querySelector('iframe').contentWindow.postMessage(
           JSON.stringify({
+            extraOptions: new Function(
+              `return ${await new Tmpl().render(
+                this,
+                this.document.extraOptions,
+                {}
+              )}`
+            )(),
             darkMode: ppp.darkMode,
             paletteWhite: paletteWhite.$value,
             paletteBlack: paletteBlack.$value,
@@ -142,13 +152,30 @@ export class SimpleFrameWidget extends WidgetWithInstrument {
 
   async validate() {
     await validate(this.container.frameUrl);
+    await validate(this.container.extraOptions);
+
+    try {
+      new Function(
+        `return ${await new Tmpl().render(
+          this,
+          this.container.extraOptions.value,
+          {}
+        )}`
+      )();
+    } catch (e) {
+      invalidate(this.container.extraOptions, {
+        errorMessage: 'Код содержит ошибки',
+        raiseException: true
+      });
+    }
   }
 
   async submit() {
     return {
       $set: {
         frameUrl: this.container.frameUrl.value,
-        ordersTraderId: this.container.ordersTraderId.value
+        ordersTraderId: this.container.ordersTraderId.value,
+        extraOptions: this.container.extraOptions.value
       }
     };
   }
@@ -279,6 +306,20 @@ export async function widgetDefinition() {
               Установить ссылку на Cloudflare Worker
             </ppp-button>
           </div>
+        </div>
+      </div>
+      <div class="widget-settings-section">
+        <div class="widget-settings-label-group">
+          <h5>Дополнительные настройки</h5>
+          <p class="description">
+            Будут переданы во фрейм, если такой механизм предусмотрен.
+          </p>
+        </div>
+        <div class="widget-settings-input-group">
+          <ppp-snippet
+            :code="${(x) => x.document.extraOptions ?? '{}'}"
+            ${ref('extraOptions')}
+          ></ppp-snippet>
         </div>
       </div>
     `
