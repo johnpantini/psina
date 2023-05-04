@@ -72,7 +72,7 @@ return {
       <div class="widget-card-holder-inner">
         <ppp-widget-card
           ?clickable="${() => instrument && symbols?.length === 1}"
-          class="${(x) => (x.pppFromHistory ? '' : 'new')}"
+          class="${(x, c) => c.parent.generateCardClass(x)}"
           @click="${(x, c) =>
             instrument &&
             symbols?.length == 1 &&

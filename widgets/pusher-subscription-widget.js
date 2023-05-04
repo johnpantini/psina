@@ -238,6 +238,20 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
     }
   }
 
+  generateCardClass(message) {
+    const classes = [];
+
+    if (!message.pppFromHistory) {
+      classes.push('new');
+    }
+
+    if (this.document.multiline) {
+      classes.push('multiline');
+    }
+
+    return classes.join(' ');
+  }
+
   async validate() {
     await validate(this.container.pusherApiId);
     await validate(this.container.instrumentTraderId);
@@ -254,6 +268,7 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
         autoSelectInstrument: this.container.autoSelectInstrument.checked,
         disableInstrumentFiltering:
           this.container.disableInstrumentFiltering.checked,
+        multiline: this.container.multiline.checked,
         historyCode: this.container.historyCode.value
       }
     };
@@ -457,6 +472,12 @@ export async function widgetDefinition({ baseWidgetUrl }) {
           ${ref('disableInstrumentFiltering')}
         >
           Не фильтровать содержимое по выбранному инструменту
+        </ppp-checkbox>
+        <ppp-checkbox
+          ?checked="${(x) => x.document.multiline}"
+          ${ref('multiline')}
+        >
+          Переносить текст заголовков на несколько строк
         </ppp-checkbox>
       </div>
     `
