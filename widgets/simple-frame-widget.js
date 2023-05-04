@@ -43,12 +43,17 @@ export const simpleFrameWidgetTemplate = html`
     <div class="widget-root">
       <div class="widget-header">
         <div class="widget-header-inner">
+          <ppp-widget-group-control
+            style="${(x) =>
+              x.document.ordersTrader ? 'display:flex' : 'display:none'}"
+          ></ppp-widget-group-control>
+          <ppp-widget-search-control
+            style="${(x) =>
+              x.document.ordersTrader ? 'display:block' : 'display:none'}"
+          ></ppp-widget-search-control>
           ${when(
-            (x) => x.document.ordersTrader,
-            html`
-              <ppp-widget-group-control></ppp-widget-group-control>
-              <ppp-widget-search-control></ppp-widget-search-control>
-            `
+            (x) => !x.document.ordersTrader,
+            html` <span class="no-spacing"></span> `
           )}
           <span class="widget-title">
             <span class="title">${(x) => x.document?.name ?? ''}</span>
@@ -145,7 +150,7 @@ export class SimpleFrameWidget extends WidgetWithInstrument {
         );
       } else if (event === 'symbolselect') {
         if (
-          this.groupControl.selection &&
+          this.groupControl?.selection &&
           !this.preview &&
           this.instrumentTrader
         ) {
