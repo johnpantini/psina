@@ -67,6 +67,28 @@ export class MigrationWidget extends WidgetWithInstrument {
         { type: 'alor-openapi-v2' },
         { $set: { type: BROKERS.ALOR } }
       );
+      await ppp.user.functions.updateMany(
+        { collection: 'widgets' },
+        {
+          url: 'https://johnpantini.github.io/psina/widgets/pusher-subscription-widget.js'
+        },
+        {
+          $set: {
+            url: 'https://psina.pages.dev/widgets/pusher-subscription-widget.js'
+          }
+        }
+      );
+      await ppp.user.functions.updateMany(
+        { collection: 'widgets' },
+        {
+          url: 'https://johnpantini.github.io/psina/widgets/simple-frame-widget.js'
+        },
+        {
+          $set: {
+            url: 'https://psina.pages.dev/widgets/simple-frame-widget.js'
+          }
+        }
+      );
       await ppp.user.functions.deleteMany({ collection: 'instruments' }, {});
 
       window.indexedDB.deleteDatabase('ppp');
