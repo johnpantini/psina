@@ -130,7 +130,6 @@ export async function widgetDefinition() {
     }).define(),
     minWidth: 275,
     minHeight: 120,
-    defaultWidth: 275,
-    defaultHeight: 165
+    defaultWidth: 275
   };
 }

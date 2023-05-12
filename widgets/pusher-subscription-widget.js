@@ -6,7 +6,16 @@ const [
   { Tmpl },
   { validate },
   { WIDGET_TYPES },
-  { normalize, typography }
+  { normalize, typography },
+  {
+    themeConditional,
+    paletteBlueDark2,
+    paletteBlueLight2,
+    paletteGreenDark2,
+    paletteGreenLight2,
+    palettePurpleDark2,
+    palettePurpleLight2
+  }
 ] = await Promise.all([
   import(`${ppp.rootUrl}/elements/widget.js`),
   import(`${ppp.rootUrl}/vendor/fast-element.min.js`),
@@ -14,6 +23,7 @@ const [
   import(`${ppp.rootUrl}/lib/ppp-errors.js`),
   import(`${ppp.rootUrl}/lib/const.js`),
   import(`${ppp.rootUrl}/design/styles.js`),
+  import(`${ppp.rootUrl}/design/design-tokens.js`),
   import(`${ppp.rootUrl}/elements/button.js`),
   import(`${ppp.rootUrl}/elements/checkbox.js`),
   import(`${ppp.rootUrl}/elements/snippet.js`),
@@ -63,6 +73,40 @@ export const pusherSubscriptionWidgetStyles = css`
 
   .dot-divider {
     margin: 0 4px;
+  }
+
+  .dot {
+    margin-left: 10px;
+    position: relative;
+  }
+
+  .dot::before {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    top: 6px;
+    left: -10px;
+  }
+
+  .dot-1::before {
+    background-color: ${themeConditional(paletteBlueDark2, paletteBlueLight2)};
+  }
+
+  .dot-2::before {
+    background-color: ${themeConditional(
+      paletteGreenDark2,
+      paletteGreenLight2
+    )};
+  }
+
+  .dot-3::before {
+    background-color: ${themeConditional(
+      palettePurpleDark2,
+      palettePurpleLight2
+    )};
   }
 
   .clickable {
@@ -232,8 +276,6 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
           this.messages.unshift(formatted);
           Observable.notify(this, 'messages');
         }
-      } else {
-        console.error('Bad message formatter:', formatted);
       }
     }
   }
@@ -308,7 +350,6 @@ export async function widgetDefinition({ baseWidgetUrl }) {
     minWidth: 150,
     minHeight: 120,
     defaultWidth: 300,
-    defaultHeight: 512,
     settings: html`
       <div class="widget-settings-section">
         <div class="widget-settings-label-group">
@@ -419,7 +460,6 @@ export async function widgetDefinition({ baseWidgetUrl }) {
             }}"
             @revert="${(x) => {
               x.formatterCode.updateCode(defaultFormatterCode);
-              x.formatterCode.$emit('input');
             }}"
             :code="${(x) => x.document.formatterCode ?? defaultFormatterCode}"
             ${ref('formatterCode')}
@@ -450,7 +490,6 @@ export async function widgetDefinition({ baseWidgetUrl }) {
             }}"
             @revert="${(x) => {
               x.historyCode.updateCode(defaultHistoryCode);
-              x.historyCode.$emit('input');
             }}"
             :code="${(x) => x.document.historyCode ?? defaultHistoryCode}"
             ${ref('historyCode')}
