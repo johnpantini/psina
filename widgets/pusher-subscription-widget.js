@@ -47,13 +47,13 @@ export const pusherSubscriptionWidgetTemplate = html`
       <div class="widget-body">
         <div class="widget-card-list">
           ${when(
-            (x) => !x.messages.length,
+            (x) => !x?.messages?.length,
             html`${html.partial(
               widgetEmptyStateTemplate('Нет данных для отображения.')
             )}`
           )}
           <div class="widget-card-list-inner">
-            ${repeat((x) => x.messages, html`${(x) => x.layout}`)}
+            ${repeat((x) => x?.messages, html`${(x) => x.layout}`)}
           </div>
         </div>
         <ppp-widget-notifications-area></ppp-widget-notifications-area>
@@ -349,7 +349,7 @@ export async function widgetDefinition({ baseWidgetUrl }) {
     }).define(),
     minWidth: 150,
     minHeight: 120,
-    defaultWidth: 300,
+    defaultWidth: 345,
     settings: html`
       <div class="widget-settings-section">
         <div class="widget-settings-label-group">
