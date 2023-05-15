@@ -47,6 +47,10 @@ switch (message.topic) {
     break;
 }
 
+if (message.priority) {
+  rightTitle = '❗️';
+}
+
 const symbols = message.tickers?.split?.(',') ?? [];
 let instrument;
 

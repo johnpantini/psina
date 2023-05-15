@@ -6,16 +6,7 @@ const [
   { Tmpl },
   { validate },
   { WIDGET_TYPES },
-  { normalize, typography },
-  {
-    themeConditional,
-    paletteBlueDark2,
-    paletteBlueLight2,
-    paletteGreenDark2,
-    paletteGreenLight2,
-    palettePurpleDark2,
-    palettePurpleLight2
-  }
+  { normalize, typography }
 ] = await Promise.all([
   import(`${ppp.rootUrl}/elements/widget.js`),
   import(`${ppp.rootUrl}/vendor/fast-element.min.js`),
@@ -23,7 +14,6 @@ const [
   import(`${ppp.rootUrl}/lib/ppp-errors.js`),
   import(`${ppp.rootUrl}/lib/const.js`),
   import(`${ppp.rootUrl}/design/styles.js`),
-  import(`${ppp.rootUrl}/design/design-tokens.js`),
   import(`${ppp.rootUrl}/elements/button.js`),
   import(`${ppp.rootUrl}/elements/checkbox.js`),
   import(`${ppp.rootUrl}/elements/snippet.js`),
@@ -69,44 +59,6 @@ export const pusherSubscriptionWidgetStyles = css`
   ${typography()}
   .widget-card-list {
     margin-top: 8px;
-  }
-
-  .dot-divider {
-    margin: 0 4px;
-  }
-
-  .dot {
-    margin-left: 10px;
-    position: relative;
-  }
-
-  .dot::before {
-    content: '';
-    position: absolute;
-    border-radius: 50%;
-    display: inline-block;
-    width: 5px;
-    height: 5px;
-    top: 6px;
-    left: -10px;
-  }
-
-  .dot-1::before {
-    background-color: ${themeConditional(paletteBlueDark2, paletteBlueLight2)};
-  }
-
-  .dot-2::before {
-    background-color: ${themeConditional(
-      paletteGreenDark2,
-      paletteGreenLight2
-    )};
-  }
-
-  .dot-3::before {
-    background-color: ${themeConditional(
-      palettePurpleDark2,
-      palettePurpleLight2
-    )};
   }
 
   .clickable {
