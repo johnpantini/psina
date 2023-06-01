@@ -103,7 +103,7 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
 
     const bodyCode = await new Tmpl().render(
       this,
-      this.document.formatterCode,
+      this.document?.formatterCode ?? '',
       {}
     );
 
@@ -164,7 +164,7 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
 
     const historyCode = await new Tmpl().render(
       this,
-      this.document.historyCode,
+      this.document?.historyCode ?? '',
       {}
     );
 
