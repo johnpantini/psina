@@ -168,7 +168,7 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
       {}
     );
 
-    for (const m of await new AsyncFunction(historyCode).call(this)) {
+    for (const m of (await new AsyncFunction(historyCode).call(this)) ?? []) {
       const formatted = await this.formatMessage(null, m);
 
       if (typeof formatted?.cursor !== 'undefined') {
