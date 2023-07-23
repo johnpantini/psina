@@ -50,20 +50,6 @@ export const psinaWidgetTemplate = html`
         </div>
       </div>
       <div class="widget-body">
-        <ppp-widget-tabs
-          activeid="${(x) => x.getActiveWidgetTab()}"
-          @change="${(x, c) => x.handleWidgetTabChange(c)}"
-          ${ref('psinaTabs')}
-        >
-          <ppp-widget-tab id="overview">Обзор</ppp-widget-tab>
-          <ppp-widget-tab id="projects">Проекты</ppp-widget-tab>
-          <ppp-widget-tab id="services">Сервисы</ppp-widget-tab>
-          <ppp-widget-tab id="operations">Операции</ppp-widget-tab>
-          <ppp-tab-panel id="overview-panel"></ppp-tab-panel>
-          <ppp-tab-panel id="projects-panel"></ppp-tab-panel>
-          <ppp-tab-panel id="services-panel"></ppp-tab-panel>
-          <ppp-tab-panel id="operations-panel"></ppp-tab-panel>
-        </ppp-widget-tabs>
         <ppp-widget-notifications-area></ppp-widget-notifications-area>
       </div>
       <ppp-widget-resize-controls></ppp-widget-resize-controls>
@@ -99,7 +85,7 @@ export async function widgetDefinition({ baseWidgetUrl }) {
     type: WIDGET_TYPES.OTHER,
     collection: 'Psina',
     title: html`Psina`,
-    description: html`Виджет служит для подключения к проекту Psina.`,
+    description: html`Виджет служит для работы с проектом Psina.`,
     customElement: PsinaWidget.compose({
       template: psinaWidgetTemplate,
       styles: psinaWidgetStyles

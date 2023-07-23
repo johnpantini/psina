@@ -33,6 +33,7 @@ const [
   import(`${ppp.rootUrl}/design/styles.js`),
   import(`${ppp.rootUrl}/design/design-tokens.js`),
   import(`${ppp.rootUrl}/elements/button.js`),
+  import(`${ppp.rootUrl}/elements/checkbox.js`),
   import(`${ppp.rootUrl}/elements/snippet.js`),
   import(`${ppp.rootUrl}/elements/text-field.js`),
   import(`${ppp.rootUrl}/elements/query-select.js`)
@@ -64,7 +65,7 @@ export const simpleFrameWidgetTemplate = html`
           (x) => x.document.frameUrl,
           html`
             <iframe
-              src="${(x) => x.document.frameUrl}"
+              src="${(x) => x.getUrl()}"
               width="100%"
               height="100%"
               style="background: transparent; border: none;"
@@ -84,6 +85,8 @@ export const simpleFrameWidgetStyles = css`
 `;
 
 export class SimpleFrameWidget extends WidgetWithInstrument {
+  #url;
+
   constructor() {
     super();
 
@@ -111,9 +114,27 @@ export class SimpleFrameWidget extends WidgetWithInstrument {
     window.removeEventListener('message', this.onWindowMessage);
   }
 
+  getUrl() {
+    if (!this.document.saveLocation) {
+      return this.document.frameUrl;
+    } else if (typeof this.document.savedLocation === 'string') {
+      const url = new URL(this.document.frameUrl);
+
+      return `${url.origin}${this.document.savedLocation}`;
+    }
+  }
+
   async onWindowMessage(e) {
     if (typeof e.data === 'object' && e.data?.origin === 'ppp-simple-frame') {
-      const { detail, event } = e.data;
+      const { detail, event, urlPath } = e.data;
+
+      if (typeof this.#url === 'undefined') {
+        this.#url = new URL(this.getUrl());
+      }
+
+      if (urlPath !== this.#url.pathname + this.#url.search) {
+        return;
+      }
 
       if (event === 'ready') {
         this.shadowRoot.querySelector('iframe').contentWindow.postMessage(
@@ -142,7 +163,8 @@ export class SimpleFrameWidget extends WidgetWithInstrument {
             positive: positive.$value,
             negative: negative.$value,
             bodyFont: bodyFont.$value,
-            fontSizeWidget: fontSizeWidget.$value
+            fontSizeWidget: fontSizeWidget.$value,
+            saveLocation: this.preview ? false : this.document.saveLocation
           }),
           '*'
         );
@@ -154,6 +176,12 @@ export class SimpleFrameWidget extends WidgetWithInstrument {
         ) {
           this.selectInstrument(detail.replace('.', ' '));
         }
+      } else if (event === 'urlchange') {
+        await this.updateDocumentFragment({
+          $set: {
+            'widgets.$.savedLocation': detail
+          }
+        });
       }
     }
   }
@@ -183,7 +211,8 @@ export class SimpleFrameWidget extends WidgetWithInstrument {
       $set: {
         frameUrl: this.container.frameUrl.value,
         ordersTraderId: this.container.ordersTraderId.value,
-        extraOptions: this.container.extraOptions.value
+        extraOptions: this.container.extraOptions.value,
+        saveLocation: this.container.saveLocation.checked
       }
     };
   }
@@ -312,6 +341,16 @@ export async function widgetDefinition() {
             >
               Установить ссылку на Cloudflare Worker
             </ppp-button>
+            <p class="description">
+              Если включить опцию, фрейм будет отслеживать URL внутри себя и
+              сохранять его в базу.
+            </p>
+            <ppp-checkbox
+              ?checked="${(x) => x.document.saveLocation ?? true}"
+              ${ref('saveLocation')}
+            >
+              Запоминать изменения URL внутри фрейма
+            </ppp-checkbox>
           </div>
         </div>
       </div>
