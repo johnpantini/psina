@@ -43,7 +43,7 @@ const query = `select ppp_counter, title, tickers, topic, date, priority from ${
   serviceCredentials.tableName
 } ${
   symbolToFilter ? `where tickers ~* '\\y${symbolToFilter}\\y'` : ''
-} order by ppp_counter desc limit 50;`;
+} order by date desc limit 50;`;
 
 const { hostname } = new URL(serviceCredentials.api.url);
 

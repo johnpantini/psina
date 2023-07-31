@@ -248,7 +248,6 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
 
   async validate() {
     await validate(this.container.pusherApiId);
-    await validate(this.container.instrumentTraderId);
     await validate(this.container.formatterCode);
     await validate(this.container.historyCode);
   }
@@ -311,7 +310,8 @@ export async function widgetDefinition({ baseWidgetUrl }) {
           <div class="control-line">
             <ppp-query-select
               ${ref('pusherApiId')}
-              placeholder="Нажмите для выбора"
+              deselectable
+              placeholder="Опционально, нажмите для выбора"
               value="${(x) => x.document.pusherApiId}"
               :context="${(x) => x}"
               :preloaded="${(x) => x.document.pusherApi ?? ''}"
