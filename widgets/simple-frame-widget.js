@@ -121,6 +121,8 @@ export class SimpleFrameWidget extends WidgetWithInstrument {
       const url = new URL(this.document.frameUrl);
 
       return `${url.origin}${this.document.savedLocation}`;
+    } else {
+      return this.document.frameUrl;
     }
   }
 
