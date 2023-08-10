@@ -310,8 +310,6 @@ export async function widgetDefinition({ baseWidgetUrl }) {
           <div class="control-line">
             <ppp-query-select
               ${ref('pusherApiId')}
-              deselectable
-              placeholder="Опционально, нажмите для выбора"
               value="${(x) => x.document.pusherApiId}"
               :context="${(x) => x}"
               :preloaded="${(x) => x.document.pusherApi ?? ''}"
@@ -391,9 +389,9 @@ export async function widgetDefinition({ baseWidgetUrl }) {
       </div>
       <div class="widget-settings-section">
         <div class="widget-settings-label-group">
-          <h5>Форматирование входящих сообщений</h5>
+          <h5>Форматирование сообщений</h5>
           <p class="description">
-            Тело функции для форматирования сообщений от Pusher.
+            Тело функции для форматирования сообщений, поступающих от Pusher.
           </p>
         </div>
         <div class="widget-settings-input-group">
@@ -403,7 +401,8 @@ export async function widgetDefinition({ baseWidgetUrl }) {
             @wizard="${(x, c) => {
               x.templateLibraryModal.removeAttribute('hidden');
 
-              x.templateLibraryModalPage.template = 'thefly/formatter';
+              x.templateLibraryModalPage.template = 'thefly';
+              x.templateLibraryModalPage.hint = 'formatter';
               x.templateLibraryModalPage.baseUrl = baseWidgetUrl.replace(
                 '/widgets',
                 ''
@@ -433,7 +432,8 @@ export async function widgetDefinition({ baseWidgetUrl }) {
             @wizard="${(x, c) => {
               x.templateLibraryModal.removeAttribute('hidden');
 
-              x.templateLibraryModalPage.template = 'thefly/history';
+              x.templateLibraryModalPage.template = 'thefly';
+              x.templateLibraryModalPage.hint = 'history';
               x.templateLibraryModalPage.baseUrl = baseWidgetUrl.replace(
                 '/widgets',
                 ''
