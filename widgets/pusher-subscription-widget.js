@@ -26,8 +26,12 @@ export const pusherSubscriptionWidgetTemplate = html`
     <div class="widget-root">
       <div class="widget-header">
         <div class="widget-header-inner">
-          <ppp-widget-group-control></ppp-widget-group-control>
-          <ppp-widget-search-control></ppp-widget-search-control>
+          <ppp-widget-group-control
+            ?hidden="${(x) => !x.document.instrumentTrader}"
+          ></ppp-widget-group-control>
+          <ppp-widget-search-control
+            ?hidden="${(x) => !x.document.instrumentTrader}"
+          ></ppp-widget-search-control>
           <span class="widget-title">
             <span class="title">${(x) => x.document?.name ?? ''}</span>
           </span>
@@ -84,7 +88,7 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
   }
 
   async connectedCallback() {
-    super.connectedCallback();
+    await super.connectedCallback();
 
     this.visibilityChange = this.visibilityChange.bind(this);
 
@@ -176,7 +180,7 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
           this.document.disableInstrumentFiltering ||
           !this.instrument ||
           formatted?.symbols?.indexOf?.(
-            this.instrumentTrader.getSymbol?.(this.instrument)
+            this.instrumentTrader?.getSymbol?.(this.instrument)
           ) > -1
         ) {
           formatted.pppFromHistory = true;
@@ -220,7 +224,7 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
           this.document.disableInstrumentFiltering ||
           !this.instrument ||
           formatted?.symbols?.indexOf?.(
-            this.instrumentTrader.getSymbol?.(this.instrument)
+            this.instrumentTrader?.getSymbol?.(this.instrument)
           ) > -1
         ) {
           formatted.pppFromHistory = false;
@@ -359,6 +363,8 @@ export async function widgetDefinition({ baseWidgetUrl }) {
         <div class="control-line">
           <ppp-query-select
             ${ref('instrumentTraderId')}
+            deselectable
+            placeholder="Опционально, нажмите для выбора"
             value="${(x) => x.document.instrumentTraderId}"
             :context="${(x) => x}"
             :preloaded="${(x) => x.document.instrumentTrader ?? ''}"
@@ -401,7 +407,8 @@ export async function widgetDefinition({ baseWidgetUrl }) {
             @wizard="${(x, c) => {
               x.templateLibraryModal.removeAttribute('hidden');
 
-              x.templateLibraryModalPage.template = 'thefly';
+              x.templateLibraryModalPage.template =
+                x.templateLibraryModalPage.template ?? 'thefly';
               x.templateLibraryModalPage.hint = 'formatter';
               x.templateLibraryModalPage.baseUrl = baseWidgetUrl.replace(
                 '/widgets',
@@ -432,7 +439,8 @@ export async function widgetDefinition({ baseWidgetUrl }) {
             @wizard="${(x, c) => {
               x.templateLibraryModal.removeAttribute('hidden');
 
-              x.templateLibraryModalPage.template = 'thefly';
+              x.templateLibraryModalPage.template =
+                x.templateLibraryModalPage.template ?? 'thefly';
               x.templateLibraryModalPage.hint = 'history';
               x.templateLibraryModalPage.baseUrl = baseWidgetUrl.replace(
                 '/widgets',

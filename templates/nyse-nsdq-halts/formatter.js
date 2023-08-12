@@ -138,9 +138,11 @@ return {
           <div
             slot="icon"
             style="${(x, c) =>
-              `background-image:url(${c.parent.instrumentTrader?.getInstrumentIconUrl?.(
-                instrument
-              )})`}"
+              c.parent.instrumentTrader
+                ? `background-image:url(${c.parent.instrumentTrader.getInstrumentIconUrl?.(
+                  instrument
+                )})`
+                : ''}"
           ></div>
           <span slot="icon-fallback">
             ${() => instrument?.symbol?.[0] ?? symbol[0]}
