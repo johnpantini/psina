@@ -132,7 +132,7 @@ function composeRightExtraSubtitle(message) {
   const lines = [];
 
   if (message.u) {
-    lines.push(`<span></span>`);
+    lines.push(`<span>&nbsp;</span>`);
   }
 
   if (message.b) {
@@ -141,7 +141,7 @@ function composeRightExtraSubtitle(message) {
                       n?.tagName?.toLowerCase?.() === 'ppp-pusher-subscription-widget')
                       ?.showIframeModal('${message.i}', true); event.stopPropagation()">Пересказ</span>`);
     } else {
-      lines.push(`<span></span>`);
+      lines.push(`<span>&nbsp;</span>`);
     }
   }
 
