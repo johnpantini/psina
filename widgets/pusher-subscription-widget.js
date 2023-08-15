@@ -263,7 +263,7 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
     if (!message.pppFromHistory) {
       classes.push('new');
 
-      message.pppFromHistory = true;
+      setTimeout(() => (message.pppFromHistory = true), 5000);
     }
 
     if (this.document.multiline) {
