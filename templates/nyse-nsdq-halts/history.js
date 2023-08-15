@@ -43,7 +43,7 @@ const query = `select ppp_counter, symbol, halt_date, halt_time, reason_code, re
   serviceCredentials.tableName
 } ${
   symbolToFilter ? `where symbol = '${symbolToFilter}'` : ''
-} order by ppp_counter desc limit 100;`;
+} order by ppp_counter desc limit 50;`;
 
 const { hostname } = new URL(serviceCredentials.api.url);
 

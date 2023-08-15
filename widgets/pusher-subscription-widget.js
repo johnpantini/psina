@@ -6,7 +6,7 @@ const [
   { Tmpl },
   { validate },
   { WIDGET_TYPES },
-  { normalize, typography }
+  { normalize, typography, scrollbars }
 ] = await Promise.all([
   import(`${ppp.rootUrl}/elements/widget.js`),
   import(`${ppp.rootUrl}/vendor/fast-element.min.js`),
@@ -20,6 +20,8 @@ const [
   import(`${ppp.rootUrl}/elements/text-field.js`),
   import(`${ppp.rootUrl}/elements/query-select.js`)
 ]);
+
+await import(`${ppp.rootUrl}/elements/pages/iframe-modal.js`);
 
 export const pusherSubscriptionWidgetTemplate = html`
   <template>
@@ -47,7 +49,10 @@ export const pusherSubscriptionWidgetTemplate = html`
             )}`
           )}
           <div class="widget-card-list-inner">
-            ${repeat((x) => x?.messages, html`${(x) => x.layout}`)}
+            ${repeat(
+              (x) => x?.messages.slice(0, x.document.depth ?? 50),
+              html`${(x) => x.layout}`
+            )}
           </div>
         </div>
         <ppp-widget-notifications-area></ppp-widget-notifications-area>
@@ -73,6 +78,18 @@ export const pusherSubscriptionWidgetStyles = css`
   .clickable:hover {
     text-decoration: underline;
   }
+
+  a {
+    text-decoration: none;
+  }
+
+  .x-scroll {
+    overflow-y: hidden;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  ${scrollbars('.x-scroll')}
 `;
 
 export class PusherSubscriptionWidget extends WidgetWithInstrument {
@@ -89,6 +106,10 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
 
   async connectedCallback() {
     await super.connectedCallback();
+
+    if (!this.document.depth) {
+      this.document.depth = 50;
+    }
 
     this.visibilityChange = this.visibilityChange.bind(this);
 
@@ -252,6 +273,11 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
 
   async validate() {
     await validate(this.container.pusherApiId);
+    await validate(this.container.depth);
+    await validate(this.container.depth, {
+      hook: async (value) => +value > 0 && +value <= 100,
+      errorMessage: 'Введите значение в диапазоне от 1 до 100'
+    });
     await validate(this.container.formatterCode);
     await validate(this.container.historyCode);
   }
@@ -260,6 +286,7 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
     return {
       $set: {
         pusherApiId: this.container.pusherApiId.value,
+        depth: Math.abs(this.container.depth.value),
         instrumentTraderId: this.container.instrumentTraderId.value,
         formatterCode: this.container.formatterCode.value,
         autoSelectInstrument: this.container.autoSelectInstrument.checked,
@@ -351,6 +378,22 @@ export async function widgetDefinition({ baseWidgetUrl }) {
               +
             </ppp-button>
           </div>
+        </div>
+      </div>
+      <div class="widget-settings-section">
+        <div class="widget-settings-label-group">
+          <h5>Количество карточек для отображения</h5>
+          <p class="description">
+            Максимальное количество сообщений для единовременного отображения.
+          </p>
+        </div>
+        <div class="widget-settings-input-group">
+          <ppp-text-field
+            type="number"
+            placeholder="50"
+            value="${(x) => x.document.depth ?? 50}"
+            ${ref('depth')}
+          ></ppp-text-field>
         </div>
       </div>
       <div class="widget-settings-section">

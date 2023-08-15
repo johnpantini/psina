@@ -87,8 +87,8 @@ return {
             style="${(x, c) =>
               c.parent.instrumentTrader
                 ? `background-image:url(${c.parent.instrumentTrader.getInstrumentIconUrl?.(
-                  instrument
-                )})`
+                    instrument
+                  )})`
                 : ''}"
           ></div>
           <span slot="icon-fallback">
@@ -98,7 +98,11 @@ return {
             ${() => he.decode(message.title)}
           </span>
           <span slot="title-right"> ${() => rightTitle} </span>
-          <span slot="subtitle-left" title="${() => symbols.join(' ')}">
+          <span
+            slot="subtitle-left"
+            class="x-scroll"
+            title="${() => symbols.join(' ')}"
+          >
             ${staticallyCompose(
               symbols
                 .map((s) => {
