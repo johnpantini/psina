@@ -48,7 +48,7 @@ export const pusherSubscriptionWidgetTemplate = html`
               widgetEmptyStateTemplate('Нет данных для отображения.')
             )}`
           )}
-          <div class="widget-card-list-inner">
+          <div class="widget-card-list-inner" ${ref('cardList')}>
             ${repeat(
               (x) => x?.messages.slice(0, x.document.depth ?? 50),
               html`${(x) => x.layout}`
@@ -98,6 +98,8 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
 
   #messageFormatter;
 
+  #cardObserver;
+
   constructor() {
     super();
 
@@ -140,7 +142,6 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
     );
 
     this.messages = await this.#historyRequest();
-
     this.pusherHandler = this.pusherHandler.bind(this);
 
     if (this.document.pusherApi) {
@@ -248,8 +249,6 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
             this.instrumentTrader?.getSymbol?.(this.instrument)
           ) > -1
         ) {
-          formatted.pppFromHistory = false;
-
           this.messages.unshift(formatted);
           Observable.notify(this, 'messages');
         }
@@ -263,7 +262,7 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
     if (!message.pppFromHistory) {
       classes.push('new');
 
-      setTimeout(() => (message.pppFromHistory = true), 5000);
+      message.pppFromHistory = true;
     }
 
     if (this.document.multiline) {
