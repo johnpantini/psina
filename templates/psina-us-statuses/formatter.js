@@ -1,6 +1,11 @@
 if (event && event !== '@@SERVICE_ID:insert') return;
 
-const symbol = message.symbol;
+if (message.T !== 's') {
+  return;
+}
+
+const symbols = message.S ?? [];
+const [symbol] = symbols;
 let instrument;
 
 if (!this.document.disableInstrumentFiltering) instrument = this.instrument;
@@ -9,14 +14,24 @@ if (!instrument) {
   instrument = await this.instrumentTrader?.instruments.get(symbol);
 }
 
-const { formatDateWithOptions, isDST } = await import(
-  `${ppp.rootUrl}/lib/intl.js`
-);
-const { staticallyCompose } = await import(
-  `${ppp.rootUrl}/vendor/fast-utilities.js`
-);
+const { formatDateWithOptions } = await import(`${ppp.rootUrl}/lib/intl.js`);
 
-const mappings = {
+// Status codes.
+const scMappings = {
+  //Tape C & O (UTP)
+  H: 'Торговая пауза',
+  Q: 'Возобновление котирования',
+  T: 'Возобновление торгов',
+  P: 'Пауза в связи с волатильностью',
+  // Tape A & B (CTA)
+  ['2']: 'Торговая пауза',
+  ['3']: 'Возобновление торгов',
+  E: 'Ограничение коротких продаж'
+};
+
+// Reason codes.
+const rcMappings = {
+  // Tape C & O (UTP)
   T1: 'Ожидаются новости⚡️',
   T2: 'Новости в процессе публикации',
   T5: 'Цена изменилась более чем на 10% за 5 мин.',
@@ -46,91 +61,31 @@ const mappings = {
   C9: 'См. коды H9 и R9',
   C11: 'См. код H11',
   R1: 'New Issue Available',
-  R2: 'Issue Available',
+  R: 'Issue Available',
   IPOQ: 'Начало котирования (IPO)',
   IPOE: 'Расширение периода подачи заявок (IPO)',
   MWCQ: 'Снятие глобальной стоп-защиты рынка',
+  // Tape A & B (CTA)
+  D: 'Новости опубликованы',
+  I: 'Дисбаланс заявок',
   M: 'Торговая пауза в связи с волатильностью 〽️',
-  D: 'Делистинг инструмента'
+  P: 'Ожидаются новости⚡️',
+  X: 'Операционная пауза',
+  Y: 'Торговля вне шага цены',
+  ['1']: 'Пауза из-за срабатывания глобальной стоп-защиты рынка (L1)',
+  ['2']: 'Пауза из-за срабатывания глобальной стоп-защиты рынка (L2)',
+  ['3']: 'Пауза из-за срабатывания глобальной стоп-защиты рынка (L3)'
 };
 
-function formatDateTime(dateString) {
-  return formatDateWithOptions(
-    new Date(`${dateString} GMT-${isDST ? '4' : '5'}`),
-    {
-      month: 'numeric',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-      second: 'numeric'
-    }
-  );
-}
-
-function composeLeftSubtitle(message, symbol) {
-  const lines = [`<span>${symbol}</span>`];
-
-  if (message.resumption_quote_time) {
-    lines.push('<span class="dot dot-1">Открытие книги заявок</span>');
-  }
-
-  if (message.resumption_trade_time) {
-    lines.push('<span class="dot dot-2">Возобновление торгов</span>');
-  }
-
-  if (lines.length > 1) {
-    lines.splice(1, 0, '<span style="margin-top: 4px;"></span>');
-  }
-
-  return staticallyCompose(`
-    <div style="display:flex; flex-direction: column; gap: 1px">
-      ${lines.join('\n')}
-    </div>
-  `);
-}
-
-function composeRightSubtitle(message) {
-  const lines = [
-    `<span>${formatDateTime(
-      `${message.halt_date} ${message.halt_time}`
-    )}</span>`
-  ];
-
-  if (message.resumption_quote_time) {
-    lines.push(
-      `<span>${formatDateTime(
-        `${message.resumption_date} ${message.resumption_quote_time}`
-      )}</span>`
-    );
-  }
-
-  if (message.resumption_trade_time) {
-    lines.push(
-      `<span>${formatDateTime(
-        `${message.resumption_date} ${message.resumption_trade_time}`
-      )}</span>`
-    );
-  }
-
-  if (lines.length > 1) {
-    lines.splice(1, 0, '<span style="margin-top: 4px;"></span>');
-  }
-
-  return staticallyCompose(`
-    <div style="display:flex; flex-direction: column; gap: 1px">
-      ${lines.join('\n')}
-    </div>
-  `);
-}
-
 return {
-  cursor: message.ppp_counter,
-  symbols: [symbol],
+  cursor: message.i,
+  message,
+  symbols,
   layout: html`
     <div class="widget-card-holder">
       <div class="widget-card-holder-inner">
         <ppp-widget-card
-          clickable
+          ?clickable="${() => instrument && symbol}"
           class="${(x, c) => c.parent.generateCardClass(x)}"
           @click="${(x, c) =>
             instrument && c.parent.selectInstrument(instrument.symbol)}"
@@ -150,17 +105,30 @@ return {
           <span
             slot="title-left"
             title="${() =>
-              mappings[message.reason_code] ?? 'Причина неизвестна'}"
+              rcMappings[message.h2] ||
+              scMappings[message.h1] ||
+              'Статус неизвестен'}"
           >
-            ${() => mappings[message.reason_code] ?? 'Причина неизвестна'}
+            ${() =>
+              rcMappings[message.h2] ||
+              scMappings[message.h1] ||
+              'Статус неизвестен'}
           </span>
           <span slot="title-right">
-            ${() => message.reason_code ?? 'N/A'}
+            ${() => message.h2 || [message.h1] || 'N/A'}
           </span>
           <span slot="subtitle-left" title="${() => symbol}">
-            ${composeLeftSubtitle(message, symbol)}
+            ${() => symbol}
           </span>
-          <div slot="subtitle-right">${composeRightSubtitle(message)}</div>
+          <div slot="subtitle-right">
+            ${formatDateWithOptions(new Date(message.t), {
+              month: 'numeric',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: 'numeric',
+              second: 'numeric'
+            })}
+          </div>
         </ppp-widget-card>
       </div>
     </div>

@@ -1,5 +1,9 @@
 if (event && event !== '@@SERVICE_ID:insert') return;
 
+if (message.T !== 'n') {
+  return;
+}
+
 const yandexToken = '@@YANDEX_TOKEN';
 const extractionEndpoint = '@@EXTRACTION_ENDPOINT';
 
@@ -215,14 +219,13 @@ return {
                 )}
           </span>
           <div slot="subtitle-right">
-            ${staticallyCompose(
-              formatDateWithOptions(new Date(message.t), {
-                month: 'numeric',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: 'numeric'
-              })
-            )}
+            ${formatDateWithOptions(new Date(message.t), {
+              month: 'numeric',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: 'numeric',
+              second: 'numeric'
+            })}
           </div>
           <span slot="subtitle-left-extra">
             ${composeLeftExtraSubtitle(message)}
