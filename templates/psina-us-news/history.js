@@ -28,6 +28,9 @@ const where = encodeURIComponent(
   JSON.stringify(
     symbolToFilter
       ? {
+          T: {
+            $eq: 'n'
+          },
           S: {
             $contains: symbolToFilter
           }
