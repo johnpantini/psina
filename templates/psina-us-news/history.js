@@ -35,7 +35,11 @@ const where = encodeURIComponent(
             $contains: symbolToFilter
           }
         }
-      : {}
+      : {
+          T: {
+            $eq: 'n'
+          }
+        }
   ).replaceAll(' ', '%20')
 );
 
