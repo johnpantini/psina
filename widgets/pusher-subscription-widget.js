@@ -98,8 +98,6 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
 
   #messageFormatter;
 
-  #cardObserver;
-
   constructor() {
     super();
 
