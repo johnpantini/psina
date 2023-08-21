@@ -21,6 +21,8 @@ const [
   import(`${ppp.rootUrl}/elements/query-select.js`)
 ]);
 
+const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+
 await import(`${ppp.rootUrl}/elements/pages/iframe-modal.js`);
 
 export const pusherSubscriptionWidgetTemplate = html`
@@ -122,10 +124,6 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
 
     this.selectInstrument(this.document.symbol, { isolate: true });
 
-    const AsyncFunction = Object.getPrototypeOf(
-      async function () {}
-    ).constructor;
-
     const bodyCode = await new Tmpl().render(
       this,
       this.document?.formatterCode ?? '',
@@ -181,11 +179,6 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
 
   async #historyRequest() {
     const messages = [];
-
-    const AsyncFunction = Object.getPrototypeOf(
-      async function () {}
-    ).constructor;
-
     const historyCode = await new Tmpl().render(
       this,
       this.document?.historyCode ?? '',
