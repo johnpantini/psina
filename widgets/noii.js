@@ -4,6 +4,7 @@ const [
   { WidgetWithInstrument, widget, widgetEmptyStateTemplate },
   { css, html, ref, when, observable },
   { WIDGET_TYPES, TRADER_DATUM },
+  { validate },
   { formatQuantity, formatPrice },
   { normalize, ellipsis },
   {
@@ -27,6 +28,7 @@ const [
   import(`${ppp.rootUrl}/elements/widget.js`),
   import(`${ppp.rootUrl}/vendor/fast-element.min.js`),
   import(`${ppp.rootUrl}/lib/const.js`),
+  import(`${ppp.rootUrl}/lib/ppp-errors.js`),
   import(`${ppp.rootUrl}/lib/intl.js`),
   import(`${ppp.rootUrl}/design/styles.js`),
   import(`${ppp.rootUrl}/design/design-tokens.js`)
@@ -320,7 +322,7 @@ export class NOIIWidget extends WidgetWithInstrument {
   }
 
   async validate() {
-    // No-op
+    await validate(this.container.instrumentTraderId);
   }
 
   async submit() {
@@ -361,8 +363,6 @@ export async function widgetDefinition() {
         <div class="control-line">
           <ppp-query-select
             ${ref('instrumentTraderId')}
-            deselectable
-            placeholder="Опционально, нажмите для выбора"
             value="${(x) => x.document.instrumentTraderId}"
             :context="${(x) => x}"
             :preloaded="${(x) => x.document.instrumentTrader ?? ''}"
