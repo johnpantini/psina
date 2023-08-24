@@ -75,7 +75,7 @@ export const noiiWidgetTemplate = html`
                   class="cross-selector"
                   @change="${(x) => x.handleCrossSelectorChange()}"
                   value="${(x) =>
-                    x.document.activeTab === 'open' ? 'open' : 'close'}"
+                    x.document.activeTab === 'close' ? 'close' : 'open'}"
                   ${ref('crossSelector')}
                 >
                   <ppp-widget-box-radio value="open">
