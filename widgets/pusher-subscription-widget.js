@@ -53,7 +53,7 @@ export const pusherSubscriptionWidgetTemplate = html`
           <div class="widget-card-list-inner" ${ref('cardList')}>
             ${repeat(
               (x) => x?.messages.slice(0, x.document.depth ?? 50),
-              html`${(x) => x.layout}`
+              html` <div cursor="${(x) => x.cursor}">${(x) => x.layout}</div> `
             )}
           </div>
         </div>
@@ -100,6 +100,8 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
 
   #messageFormatter;
 
+  #cardDimmerInterval;
+
   constructor() {
     super();
 
@@ -113,9 +115,9 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
       this.document.depth = 50;
     }
 
-    this.visibilityChange = this.visibilityChange.bind(this);
-
-    document.addEventListener('visibilitychange', this.visibilityChange);
+    if (!this.document.newTimeout) {
+      this.document.newTimeout = 5;
+    }
 
     this.messages = [];
     this.instrumentTrader = await ppp.getOrCreateTrader(
@@ -137,6 +139,8 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
       bodyCode
     );
 
+    this.#cardDimmerInterval = setInterval(() => this.dimCards(), 750);
+
     this.messages = await this.#historyRequest();
     this.pusherHandler = this.pusherHandler.bind(this);
 
@@ -152,7 +156,7 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
   }
 
   async disconnectedCallback() {
-    document.removeEventListener('visibilitychange', this.visibilityChange);
+    clearInterval(this.#cardDimmerInterval);
 
     if (this.document.pusherApi) {
       const connection = await ppp.getOrCreatePusherConnection(
@@ -167,13 +171,42 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
     super.disconnectedCallback();
   }
 
-  visibilityChange() {
+  generateCardClass(message) {
+    const classes = [];
+
+    if (!message.pppFromHistory) {
+      if (
+        Date.now() - (message.pppInsertionTimestamp ?? Date.now()) <
+        this.document.newTimeout * 1000
+      ) {
+        classes.push('new');
+      }
+    }
+
+    if (this.document.multiline) {
+      classes.push('multiline');
+    }
+
+    return classes.join(' ');
+  }
+
+  dimCards() {
     if (document.visibilityState === 'visible') {
-      setTimeout(() => {
-        Array.from(this.querySelectorAll('.new')).forEach((n) =>
-          n.classList.remove('new')
-        );
-      }, 5000);
+      const newCards = this.cardList.querySelectorAll('.new');
+
+      Array.from(newCards).forEach((card) => {
+        const cursor = card.closest('[cursor]')?.getAttribute('cursor');
+        const message = this.messages.find((m) => m.cursor === cursor);
+
+        if (message) {
+          if (
+            Date.now() - (message.pppInsertionTimestamp ?? Date.now()) >=
+            this.document.newTimeout * 1000
+          ) {
+            card.classList.remove('new');
+          }
+        }
+      });
     }
   }
 
@@ -197,6 +230,7 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
           ) > -1
         ) {
           formatted.pppFromHistory = true;
+          formatted.pppInsertionTimestamp = Date.now();
 
           messages.push(formatted);
         }
@@ -240,27 +274,13 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
             this.instrumentTrader?.getSymbol?.(this.instrument)
           ) > -1
         ) {
+          formatted.pppInsertionTimestamp = Date.now();
+
           this.messages.unshift(formatted);
           Observable.notify(this, 'messages');
         }
       }
     }
-  }
-
-  generateCardClass(message) {
-    const classes = [];
-
-    if (!message.pppFromHistory) {
-      classes.push('new');
-
-      message.pppFromHistory = true;
-    }
-
-    if (this.document.multiline) {
-      classes.push('multiline');
-    }
-
-    return classes.join(' ');
   }
 
   async validate() {
@@ -270,6 +290,12 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
       hook: async (value) => +value > 0 && +value <= 100,
       errorMessage: 'Введите значение в диапазоне от 1 до 100'
     });
+    await validate(this.container.newTimeout);
+    await validate(this.container.newTimeout, {
+      hook: async (value) => +value > 0 && +value <= 100,
+      errorMessage: 'Введите значение в диапазоне от 1 до 100'
+    });
+
     await validate(this.container.formatterCode);
     await validate(this.container.historyCode);
   }
@@ -279,6 +305,7 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
       $set: {
         pusherApiId: this.container.pusherApiId.value,
         depth: Math.abs(this.container.depth.value),
+        newTimeout: Math.abs(this.container.newTimeout.value),
         instrumentTraderId: this.container.instrumentTraderId.value,
         formatterCode: this.container.formatterCode.value,
         autoSelectInstrument: this.container.autoSelectInstrument.checked,
@@ -374,22 +401,6 @@ export async function widgetDefinition({ baseWidgetUrl }) {
       </div>
       <div class="widget-settings-section">
         <div class="widget-settings-label-group">
-          <h5>Количество карточек для отображения</h5>
-          <p class="description">
-            Максимальное количество сообщений для единовременного отображения.
-          </p>
-        </div>
-        <div class="widget-settings-input-group">
-          <ppp-text-field
-            type="number"
-            placeholder="50"
-            value="${(x) => x.document.depth ?? 50}"
-            ${ref('depth')}
-          ></ppp-text-field>
-        </div>
-      </div>
-      <div class="widget-settings-section">
-        <div class="widget-settings-label-group">
           <h5>Трейдер</h5>
           <p class="description">
             Трейдер для поиска и переключения инструмента.
@@ -426,6 +437,39 @@ export async function widgetDefinition({ baseWidgetUrl }) {
           >
             +
           </ppp-button>
+        </div>
+      </div>
+      <div class="widget-settings-section">
+        <div class="widget-settings-label-group">
+          <h5>Количество сообщений для отображения</h5>
+          <p class="description">
+            Максимальное количество сообщений для единовременного отображения.
+          </p>
+        </div>
+        <div class="widget-settings-input-group">
+          <ppp-text-field
+            type="number"
+            placeholder="50"
+            value="${(x) => x.document.depth ?? 50}"
+            ${ref('depth')}
+          ></ppp-text-field>
+        </div>
+      </div>
+      <div class="widget-settings-section">
+        <div class="widget-settings-label-group">
+          <h5>Время подсветки новых сообщений</h5>
+          <p class="description">
+            Время, в течение которое новое входящее сообщение будет выделено
+            цветом. Задаётся в секундах.
+          </p>
+        </div>
+        <div class="widget-settings-input-group">
+          <ppp-text-field
+            type="number"
+            placeholder="5"
+            value="${(x) => x.document.newTimeout ?? 5}"
+            ${ref('newTimeout')}
+          ></ppp-text-field>
         </div>
       </div>
       <div class="widget-settings-section">
