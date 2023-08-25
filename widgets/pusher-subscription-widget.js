@@ -1,7 +1,12 @@
 /** @decorator */
 
 const [
-  { WidgetWithInstrument, widget, widgetEmptyStateTemplate },
+  {
+    WidgetWithInstrument,
+    widgetStyles,
+    widgetEmptyStateTemplate,
+    widgetDefaultHeaderTemplate
+  },
   { Observable, observable, css, html, ref, when, repeat },
   { Tmpl },
   { validate },
@@ -18,7 +23,8 @@ const [
   import(`${ppp.rootUrl}/elements/checkbox.js`),
   import(`${ppp.rootUrl}/elements/snippet.js`),
   import(`${ppp.rootUrl}/elements/text-field.js`),
-  import(`${ppp.rootUrl}/elements/query-select.js`)
+  import(`${ppp.rootUrl}/elements/query-select.js`),
+  import(`${ppp.rootUrl}/elements/widget-controls.js`)
 ]);
 
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
@@ -28,20 +34,7 @@ await import(`${ppp.rootUrl}/elements/pages/iframe-modal.js`);
 export const pusherSubscriptionWidgetTemplate = html`
   <template>
     <div class="widget-root">
-      <div class="widget-header">
-        <div class="widget-header-inner">
-          <ppp-widget-group-control
-            ?hidden="${(x) => !x.document.instrumentTrader}"
-          ></ppp-widget-group-control>
-          <ppp-widget-search-control
-            ?hidden="${(x) => !x.document.instrumentTrader}"
-          ></ppp-widget-search-control>
-          <span class="widget-title">
-            <span class="title">${(x) => x.document?.name ?? ''}</span>
-          </span>
-          <ppp-widget-header-buttons></ppp-widget-header-buttons>
-        </div>
-      </div>
+      ${widgetDefaultHeaderTemplate()}
       <div class="widget-body">
         <div class="widget-card-list">
           ${when(
@@ -53,7 +46,7 @@ export const pusherSubscriptionWidgetTemplate = html`
           <div class="widget-card-list-inner" ${ref('cardList')}>
             ${repeat(
               (x) => x?.messages.slice(0, x.document.depth ?? 50),
-              html` <div cursor="${(x) => x.cursor}">${(x) => x.layout}</div> `
+              html` <div cursor="${(x) => x.cursor}">${(x) => x.layout}</div>`
             )}
           </div>
         </div>
@@ -66,7 +59,7 @@ export const pusherSubscriptionWidgetTemplate = html`
 
 export const pusherSubscriptionWidgetStyles = css`
   ${normalize()}
-  ${widget()}
+  ${widgetStyles()}
   ${typography()}
   .widget-card-list {
     margin-top: 8px;

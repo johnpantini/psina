@@ -1,5 +1,5 @@
 const [
-  { Widget, widget },
+  { Widget, widgetStyles },
   { css, html, ref, when },
   { validate, invalidate },
   { Tmpl },
@@ -35,7 +35,8 @@ const [
   import(`${ppp.rootUrl}/elements/button.js`),
   import(`${ppp.rootUrl}/elements/snippet.js`),
   import(`${ppp.rootUrl}/elements/text-field.js`),
-  import(`${ppp.rootUrl}/elements/query-select.js`)
+  import(`${ppp.rootUrl}/elements/query-select.js`),
+  import(`${ppp.rootUrl}/elements/widget-controls.js`)
 ]);
 
 export const psinaWidgetTemplate = html`
@@ -59,7 +60,7 @@ export const psinaWidgetTemplate = html`
 
 export const psinaWidgetStyles = css`
   ${normalize()}
-  ${widget()}
+  ${widgetStyles()}
   ${typography()}
 `;
 

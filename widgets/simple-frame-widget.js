@@ -1,5 +1,5 @@
 const [
-  { WidgetWithInstrument, widget },
+  { WidgetWithInstrument, widgetStyles, widgetDefaultHeaderTemplate },
   { css, html, ref, when },
   { validate, invalidate },
   { Tmpl },
@@ -36,30 +36,14 @@ const [
   import(`${ppp.rootUrl}/elements/checkbox.js`),
   import(`${ppp.rootUrl}/elements/snippet.js`),
   import(`${ppp.rootUrl}/elements/text-field.js`),
-  import(`${ppp.rootUrl}/elements/query-select.js`)
+  import(`${ppp.rootUrl}/elements/query-select.js`),
+  import(`${ppp.rootUrl}/elements/widget-controls.js`)
 ]);
 
 export const simpleFrameWidgetTemplate = html`
   <template>
     <div class="widget-root">
-      <div class="widget-header">
-        <div class="widget-header-inner">
-          <ppp-widget-group-control
-            ?hidden="${(x) => !x.document.ordersTrader}"
-          ></ppp-widget-group-control>
-          <ppp-widget-search-control
-            ?hidden="${(x) => !x.document.ordersTrader}"
-          ></ppp-widget-search-control>
-          ${when(
-            (x) => !x.document.ordersTrader,
-            html` <span class="no-spacing"></span> `
-          )}
-          <span class="widget-title">
-            <span class="title">${(x) => x.document?.name ?? ''}</span>
-          </span>
-          <ppp-widget-header-buttons></ppp-widget-header-buttons>
-        </div>
-      </div>
+      ${widgetDefaultHeaderTemplate()}
       <div class="widget-body">
         ${when(
           (x) => x.document.frameUrl,
@@ -81,7 +65,7 @@ export const simpleFrameWidgetTemplate = html`
 
 export const simpleFrameWidgetStyles = css`
   ${normalize()}
-  ${widget()}
+  ${widgetStyles()}
 `;
 
 export class SimpleFrameWidget extends WidgetWithInstrument {

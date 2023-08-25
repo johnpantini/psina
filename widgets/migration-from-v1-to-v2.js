@@ -1,5 +1,5 @@
 const [
-  { WidgetWithInstrument, widget },
+  { WidgetWithInstrument, widgetStyles },
   { css, html },
   { invalidate },
   { WIDGET_TYPES, BROKERS },
@@ -10,7 +10,8 @@ const [
   import(`${ppp.rootUrl}/lib/ppp-errors.js`),
   import(`${ppp.rootUrl}/lib/const.js`),
   import(`${ppp.rootUrl}/design/styles.js`),
-  import(`${ppp.rootUrl}/elements/button.js`)
+  import(`${ppp.rootUrl}/elements/button.js`),
+  import(`${ppp.rootUrl}/elements/widget-controls.js`)
 ]);
 
 export const migrationWidgetTemplate = html`
@@ -40,7 +41,7 @@ export const migrationWidgetTemplate = html`
 
 export const migrationWidgetStyles = css`
   ${normalize()}
-  ${widget()}
+  ${widgetStyles()}
   .widget-body {
     align-items: center;
     justify-content: center;

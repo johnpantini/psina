@@ -1,7 +1,12 @@
 /** @decorator */
 
 const [
-  { WidgetWithInstrument, widget, widgetEmptyStateTemplate },
+  {
+    WidgetWithInstrument,
+    widgetStyles,
+    widgetEmptyStateTemplate,
+    widgetDefaultHeaderTemplate
+  },
   { css, html, ref, when, observable },
   { WIDGET_TYPES, TRADER_DATUM },
   { validate },
@@ -31,22 +36,14 @@ const [
   import(`${ppp.rootUrl}/lib/ppp-errors.js`),
   import(`${ppp.rootUrl}/lib/intl.js`),
   import(`${ppp.rootUrl}/design/styles.js`),
-  import(`${ppp.rootUrl}/design/design-tokens.js`)
+  import(`${ppp.rootUrl}/design/design-tokens.js`),
+  import(`${ppp.rootUrl}/elements/widget-controls.js`)
 ]);
 
 export const noiiWidgetTemplate = html`
   <template>
     <div class="widget-root">
-      <div class="widget-header">
-        <div class="widget-header-inner">
-          <ppp-widget-group-control></ppp-widget-group-control>
-          <ppp-widget-search-control></ppp-widget-search-control>
-          <span class="widget-title">
-            <span class="title">${(x) => x.document?.name ?? ''}</span>
-          </span>
-          <ppp-widget-header-buttons></ppp-widget-header-buttons>
-        </div>
-      </div>
+      ${widgetDefaultHeaderTemplate()}
       <div class="widget-body">
         ${when(
           (x) => !x.instrument,
@@ -143,7 +140,7 @@ export const noiiWidgetTemplate = html`
 
 export const noiiWidgetStyles = css`
   ${normalize()}
-  ${widget()}
+  ${widgetStyles()}
   .controls {
     z-index: 1;
     display: flex;
