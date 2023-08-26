@@ -29,25 +29,17 @@ if (!this.hasAttribute('listening')) {
 
           page.src = page.generateHtml(m.message.b);
         } else {
-          const summaryRequest = await fetch(
-            new URL(
-              'fetch',
-              ppp.keyVault.getKey('service-machine-url')
-            ).toString(),
+          const summaryRequest = await ppp.fetch(
+            'https://300.ya.ru/api/sharing-url',
             {
-              cache: 'no-cache',
               method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'User-Agent': navigator.userAgent,
+                Authorization: `OAuth ${yandexToken}`
+              },
               body: JSON.stringify({
-                method: 'POST',
-                url: 'https://300.ya.ru/api/sharing-url',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'User-Agent': navigator.userAgent,
-                  Authorization: `OAuth ${yandexToken}`
-                },
-                body: JSON.stringify({
-                  article_url: new URL(cursor, extractionEndpoint).toString()
-                })
+                article_url: new URL(cursor, extractionEndpoint).toString()
               })
             }
           );
