@@ -66,12 +66,7 @@ export const pusherSubscriptionWidgetStyles = css`
   }
 
   .clickable {
-    text-decoration: none;
     cursor: pointer;
-  }
-
-  .clickable:hover {
-    text-decoration: underline;
   }
 
   a {

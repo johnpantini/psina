@@ -107,7 +107,7 @@ function composeLeftExtraSubtitle(message) {
 
   if (message.u) {
     lines.push(
-      `<span class="link clickable"><a target="_blank" rel="noopener" href="${message.u}">Перейти по ссылке</a></span>`
+      `<a class="link" target="_blank" rel="noopener" href="${message.u}">Перейти по ссылке</a>`
     );
   }
 
@@ -119,10 +119,6 @@ function composeLeftExtraSubtitle(message) {
 
   if (!lines.length) {
     return '';
-  }
-
-  if (lines.length > 1) {
-    lines.splice(1, 0, '<span style="margin-top: 4px;"></span>');
   }
 
   return staticallyCompose(`
@@ -147,10 +143,6 @@ function composeRightExtraSubtitle(message) {
     } else {
       lines.push(`<span>&nbsp;</span>`);
     }
-  }
-
-  if (lines.length > 1) {
-    lines.splice(1, 0, '<span style="margin-top: 4px;"></span>');
   }
 
   return staticallyCompose(`

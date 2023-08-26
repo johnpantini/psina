@@ -5,7 +5,8 @@ const [
     WidgetWithInstrument,
     widgetStyles,
     widgetEmptyStateTemplate,
-    widgetDefaultHeaderTemplate
+    widgetDefaultHeaderTemplate,
+    widgetWithInstrumentBodyTemplate
   },
   { css, html, ref, when, observable },
   { WIDGET_TYPES, TRADER_DATUM },
@@ -45,92 +46,71 @@ export const noiiWidgetTemplate = html`
     <div class="widget-root">
       ${widgetDefaultHeaderTemplate()}
       <div class="widget-body">
-        ${when(
-          (x) => !x.instrument,
-          html`${html.partial(
-            widgetEmptyStateTemplate('Выберите инструмент.')
-          )}`
-        )}
-        ${when(
-          (x) =>
-            x.instrumentTrader &&
-            x.instrument &&
-            !x.instrumentTrader.supportsInstrument(x.instrument),
-          html`${html.partial(
-            widgetEmptyStateTemplate('Инструмент не поддерживается.')
-          )}`
-        )}
-        ${when(
-          (x) =>
-            x.instrumentTrader &&
-            x.instrument &&
-            x.instrumentTrader.supportsInstrument(x.instrument),
-          html`
-            <div class="controls">
-              <div class="tabs">
-                <ppp-widget-box-radio-group
-                  class="cross-selector"
-                  @change="${(x) => x.handleCrossSelectorChange()}"
-                  value="${(x) =>
-                    x.document.activeTab === 'close' ? 'close' : 'open'}"
-                  ${ref('crossSelector')}
-                >
-                  <ppp-widget-box-radio value="open">
-                    Открытие
-                  </ppp-widget-box-radio>
-                  <ppp-widget-box-radio value="close">
-                    Закрытие
-                  </ppp-widget-box-radio>
-                </ppp-widget-box-radio-group>
+        ${widgetWithInstrumentBodyTemplate(html`
+          <div class="controls">
+            <div class="tabs">
+              <ppp-widget-box-radio-group
+                class="cross-selector"
+                @change="${(x) => x.handleCrossSelectorChange()}"
+                value="${(x) =>
+                  x.document.activeTab === 'close' ? 'close' : 'open'}"
+                ${ref('crossSelector')}
+              >
+                <ppp-widget-box-radio value="open">
+                  Открытие
+                </ppp-widget-box-radio>
+                <ppp-widget-box-radio value="close">
+                  Закрытие
+                </ppp-widget-box-radio>
+              </ppp-widget-box-radio-group>
+            </div>
+          </div>
+          <div class="widget-margin-spacer"></div>
+          <div class="widget-section">
+            <div class="imbalance-type-holder">
+              <span class="${(x) => x.getImbalanceTypeClasses()}">
+                ${(x) => x.getImbalanceTypeText()}
+              </span>
+            </div>
+            <div
+              class="imbalance-indicator"
+              style="background: linear-gradient${(x) => x.getGradientCSS()}"
+            ></div>
+            <div class="imbalance-values">
+              <div>
+                <span>${(x) => formatQuantity(x.noii.pairedShares)}</span> в
+                паре
+              </div>
+              <div>
+                <span>${(x) => formatQuantity(x.noii.imbShares)}</span>
+                дисбаланс
               </div>
             </div>
-            <div class="widget-margin-spacer"></div>
-            <div class="widget-section">
-              <div class="imbalance-type-holder">
-                <span class="${(x) => x.getImbalanceTypeClasses()}">
-                  ${(x) => x.getImbalanceTypeText()}
+          </div>
+          <div class="widget-margin-spacer"></div>
+          <div class="widget-section">
+            <div class="widget-summary">
+              <div class="widget-summary-line">
+                <span class="dot dot-1">Текущая цена</span>
+                <span class="widget-summary-line-price">
+                  ${(x) => formatPrice(x.noii.imbRefPrice, x.instrument)}
                 </span>
               </div>
-              <div
-                class="imbalance-indicator"
-                style="background: linear-gradient${(x) => x.getGradientCSS()}"
-              ></div>
-              <div class="imbalance-values">
-                <div>
-                  <span>${(x) => formatQuantity(x.noii.pairedShares)}</span> в
-                  паре
-                </div>
-                <div>
-                  <span>${(x) => formatQuantity(x.noii.imbShares)}</span>
-                  дисбаланс
-                </div>
+              <div class="widget-summary-line">
+                <span class="dot dot-2">Ближняя цена</span>
+                <span class="widget-summary-line-price">
+                  ${(x) => formatPrice(x.noii.imbNearPrice, x.instrument)}
+                </span>
+              </div>
+              <div class="widget-summary-line">
+                <span class="dot dot-3">Дальняя цена</span>
+                <span class="widget-summary-line-price">
+                  ${(x) => formatPrice(x.noii.imbFarPrice, x.instrument)}
+                </span>
               </div>
             </div>
-            <div class="widget-margin-spacer"></div>
-            <div class="widget-section">
-              <div class="widget-summary">
-                <div class="widget-summary-line">
-                  <span class="dot dot-1">Текущая цена</span>
-                  <span class="widget-summary-line-price">
-                    ${(x) => formatPrice(x.noii.imbRefPrice, x.instrument)}
-                  </span>
-                </div>
-                <div class="widget-summary-line">
-                  <span class="dot dot-2">Ближняя цена</span>
-                  <span class="widget-summary-line-price">
-                    ${(x) => formatPrice(x.noii.imbNearPrice, x.instrument)}
-                  </span>
-                </div>
-                <div class="widget-summary-line">
-                  <span class="dot dot-3">Дальняя цена</span>
-                  <span class="widget-summary-line-price">
-                    ${(x) => formatPrice(x.noii.imbFarPrice, x.instrument)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          `
-        )}
+          </div>
+        `)}
         <ppp-widget-notifications-area></ppp-widget-notifications-area>
       </div>
       <ppp-widget-resize-controls></ppp-widget-resize-controls>
