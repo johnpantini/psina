@@ -23,7 +23,6 @@ if (
   symbolToFilter = this.instrumentTrader.getSymbol(this.instrument);
 }
 
-const serviceMachineUrl = ppp.keyVault.getKey('service-machine-url');
 const where = encodeURIComponent(
   JSON.stringify(
     symbolToFilter
@@ -44,16 +43,14 @@ const where = encodeURIComponent(
 );
 
 const statuses = await (
-  await fetch(new URL('fetch', serviceMachineUrl).toString(), {
-    method: 'POST',
-    body: JSON.stringify({
-      method: 'GET',
-      url: `https://${ASTRA_DB_ID}-${ASTRA_DB_REGION}.apps.astra.datastax.com/api/rest/v2/keyspaces/${ASTRA_DB_KEYSPACE}/us_news?page-size=50&where=${where}`,
+  await ppp.fetch(
+    `https://${ASTRA_DB_ID}-${ASTRA_DB_REGION}.apps.astra.datastax.com/api/rest/v2/keyspaces/${ASTRA_DB_KEYSPACE}/us_news?page-size=50&where=${where}`,
+    {
       headers: {
         'X-Cassandra-Token': ASTRA_DB_APPLICATION_TOKEN
       }
-    })
-  })
+    }
+  )
 ).json();
 
 return statuses?.data ?? [];
