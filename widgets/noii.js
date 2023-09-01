@@ -339,6 +339,7 @@ export async function widgetDefinition() {
         </div>
         <div class="control-line">
           <ppp-query-select
+            standalone
             ${ref('instrumentTraderId')}
             value="${(x) => x.document.instrumentTraderId}"
             :context="${(x) => x}"

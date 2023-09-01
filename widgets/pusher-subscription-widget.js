@@ -348,6 +348,7 @@ export async function widgetDefinition({ baseWidgetUrl }) {
           <div class="control-line">
             <ppp-query-select
               ${ref('pusherApiId')}
+              standalone
               value="${(x) => x.document.pusherApiId}"
               :context="${(x) => x}"
               :preloaded="${(x) => x.document.pusherApi ?? ''}"
@@ -397,6 +398,7 @@ export async function widgetDefinition({ baseWidgetUrl }) {
         <div class="control-line">
           <ppp-query-select
             ${ref('instrumentTraderId')}
+            standalone
             deselectable
             placeholder="Опционально, нажмите для выбора"
             value="${(x) => x.document.instrumentTraderId}"

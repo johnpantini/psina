@@ -233,6 +233,7 @@ export async function widgetDefinition() {
           <ppp-query-select
             ${ref('ordersTraderId')}
             deselectable
+            standalone
             placeholder="Опционально, нажмите для выбора"
             value="${(x) => x.document.ordersTraderId}"
             :context="${(x) => x}"
@@ -285,9 +286,11 @@ export async function widgetDefinition() {
             value="${(x) => x.document.frameUrl ?? ''}"
             ${ref('frameUrl')}
           ></ppp-text-field>
+          <div class="spacing2"></div>
           <div class="control-stack">
             <ppp-query-select
               ${ref('cloudflareWorkerSelector')}
+              standalone
               :context="${(x) => x}"
               :placeholder="${() => 'Нажмите, чтобы выбрать сервис'}"
               :query="${() => {
