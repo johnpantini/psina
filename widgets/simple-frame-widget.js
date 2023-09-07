@@ -229,7 +229,7 @@ export async function widgetDefinition() {
             такая функциональность.
           </p>
         </div>
-        <div class="control-line">
+        <div class="control-line flex-start">
           <ppp-query-select
             ${ref('ordersTraderId')}
             deselectable

@@ -337,7 +337,7 @@ export async function widgetDefinition() {
             инструментов.
           </p>
         </div>
-        <div class="control-line">
+        <div class="control-line flex-start">
           <ppp-query-select
             standalone
             ${ref('instrumentTraderId')}

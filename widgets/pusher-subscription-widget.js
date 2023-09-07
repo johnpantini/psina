@@ -345,7 +345,7 @@ export async function widgetDefinition({ baseWidgetUrl }) {
           <h5>Интеграция с Pusher</h5>
         </div>
         <div class="widget-settings-input-group">
-          <div class="control-line">
+          <div class="control-line flex-start">
             <ppp-query-select
               ${ref('pusherApiId')}
               standalone
@@ -395,7 +395,7 @@ export async function widgetDefinition({ baseWidgetUrl }) {
             Трейдер для поиска и переключения инструмента.
           </p>
         </div>
-        <div class="control-line">
+        <div class="control-line flex-start">
           <ppp-query-select
             ${ref('instrumentTraderId')}
             standalone
