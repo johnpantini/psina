@@ -1,5 +1,10 @@
 const [
-  { WidgetWithInstrument, widgetStyles, widgetDefaultHeaderTemplate },
+  {
+    WidgetWithInstrument,
+    widgetStyles,
+    widgetDefaultHeaderTemplate,
+    widgetStackSelectorTemplate
+  },
   { css, html, ref, when },
   { validate, invalidate },
   { Tmpl },
@@ -45,6 +50,7 @@ export const simpleFrameWidgetTemplate = html`
     <div class="widget-root">
       ${widgetDefaultHeaderTemplate()}
       <div class="widget-body">
+        ${widgetStackSelectorTemplate()}
         ${when(
           (x) => x.document.frameUrl,
           html`

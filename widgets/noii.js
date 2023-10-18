@@ -4,9 +4,9 @@ const [
   {
     WidgetWithInstrument,
     widgetStyles,
-    widgetEmptyStateTemplate,
     widgetDefaultHeaderTemplate,
-    widgetWithInstrumentBodyTemplate
+    widgetWithInstrumentBodyTemplate,
+    widgetStackSelectorTemplate
   },
   { css, html, ref, when, observable },
   { WIDGET_TYPES, TRADER_DATUM },
@@ -46,6 +46,7 @@ export const noiiWidgetTemplate = html`
     <div class="widget-root">
       ${widgetDefaultHeaderTemplate()}
       <div class="widget-body">
+        ${widgetStackSelectorTemplate()}
         ${widgetWithInstrumentBodyTemplate(html`
           <div class="controls">
             <div class="tabs">

@@ -5,7 +5,8 @@ const [
     WidgetWithInstrument,
     widgetStyles,
     widgetEmptyStateTemplate,
-    widgetDefaultHeaderTemplate
+    widgetDefaultHeaderTemplate,
+    widgetStackSelectorTemplate
   },
   { Observable, observable, css, html, ref, when, repeat },
   { Tmpl },
@@ -36,6 +37,7 @@ export const pusherSubscriptionWidgetTemplate = html`
     <div class="widget-root">
       ${widgetDefaultHeaderTemplate()}
       <div class="widget-body">
+        ${widgetStackSelectorTemplate()}
         <div class="widget-card-list">
           ${when(
             (x) => !x?.messages?.length,
