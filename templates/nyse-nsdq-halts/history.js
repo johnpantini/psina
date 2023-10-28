@@ -22,8 +22,21 @@ const serviceCredentials = [%#JSON.stringify(
       ]
     );
 
+    const api = await ppp.decrypt(service.supabaseApi);
+    const connector = await ppp.user.functions.findOne(
+      { collection: 'services' },
+      {
+        _id: api.connectorServiceId
+      }
+    );
+    const { getAspirantWorkerBaseUrl } = await import(
+      `${ppp.rootUrl}/elements/pages/service-ppp-aspirant-worker.js`
+    );
+    const connectorUrl = await getAspirantWorkerBaseUrl(connector);
+
     return {
-      api: await ppp.decrypt(service.supabaseApi),
+      api,
+      connectorUrl,
       tableName: `nyse_nsdq_halts_${service._id}`
     };
   })()
@@ -50,22 +63,22 @@ const { hostname } = new URL(serviceCredentials.api.url);
 const [results] =
   (
     await (
-      await fetch(
-        new URL('pg', ppp.keyVault.getKey('service-machine-url')).toString(),
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            query,
-            connectionString: `postgres://${
-              serviceCredentials.api.user
-            }:${encodeURIComponent(
-              serviceCredentials.api.password
-            )}@db.${hostname}:${serviceCredentials.api.port}/${
-              serviceCredentials.api.db
-            }`
-          })
-        }
-      )
+      await fetch(`${serviceCredentials.connectorUrl}pg`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          query,
+          connectionString: `postgres://${
+            serviceCredentials.api.user
+          }:${encodeURIComponent(
+            serviceCredentials.api.password
+          )}@db.${hostname}:${serviceCredentials.api.port}/${
+            serviceCredentials.api.db
+          }`
+        })
+      })
     ).json()
   ).results ?? [];
 
