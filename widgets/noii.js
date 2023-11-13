@@ -8,7 +8,7 @@ const [
     widgetWithInstrumentBodyTemplate,
     widgetStackSelectorTemplate
   },
-  { css, html, ref, when, observable },
+  { css, html, ref, observable, attr },
   { WIDGET_TYPES, TRADER_DATUM },
   { validate },
   { formatQuantity, formatPrice },
@@ -188,20 +188,20 @@ export class NOIIWidget extends WidgetWithInstrument {
   @observable
   noii;
 
-  @observable
-  noiiClose;
+  @attr({ attribute: 'noii' })
+  noiiTab;
 
   constructor() {
     super();
 
     this.noii = {};
-    this.noiiClose = false;
+    this.noiiTab = 'open';
   }
 
   async connectedCallback() {
     super.connectedCallback();
 
-    this.noiiClose = this.document.activeTab === 'close';
+    this.noiiTab = this.document.activeTab;
 
     if (!this.document.instrumentTrader) {
       return this.notificationsArea.error({
@@ -287,7 +287,7 @@ export class NOIIWidget extends WidgetWithInstrument {
   }
 
   async handleCrossSelectorChange() {
-    this.noiiClose = this.crossSelector.value === 'close';
+    this.noiiTab = this.crossSelector.value;
     this.noii = {};
 
     await this.updateDocumentFragment({
