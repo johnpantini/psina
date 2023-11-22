@@ -92,19 +92,28 @@ export const noiiWidgetTemplate = html`
           <div class="widget-section">
             <div class="widget-summary">
               <div class="widget-summary-line">
-                <span class="dot dot-1">Текущая цена</span>
+                <div class="control-line price-line">
+                  <span class="dot dot-1"></span>
+                  <span>Текущая цена</span>
+                </div>
                 <span class="widget-summary-line-price">
                   ${(x) => formatPrice(x.noii.imbRefPrice, x.instrument)}
                 </span>
               </div>
               <div class="widget-summary-line">
-                <span class="dot dot-2">Ближняя цена</span>
+                <div class="control-line price-line">
+                  <span class="dot dot-2"></span>
+                  <span>Ближняя цена</span>
+                </div>
                 <span class="widget-summary-line-price">
                   ${(x) => formatPrice(x.noii.imbNearPrice, x.instrument)}
                 </span>
               </div>
               <div class="widget-summary-line">
-                <span class="dot dot-3">Дальняя цена</span>
+                <div class="control-line price-line">
+                  <span class="dot dot-3"></span>
+                  <span>Дальняя цена</span>
+                </div>
                 <span class="widget-summary-line-price">
                   ${(x) => formatPrice(x.noii.imbFarPrice, x.instrument)}
                 </span>
@@ -131,6 +140,10 @@ export const noiiWidgetStyles = css`
 
   .tabs {
     padding: 10px 8px 4px 8px;
+  }
+
+  .price-line {
+    align-items: center;
   }
 
   .imbalance-type-holder {
