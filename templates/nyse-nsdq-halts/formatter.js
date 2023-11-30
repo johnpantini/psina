@@ -71,11 +71,11 @@ function composeLeftSubtitle(message, symbol) {
   const lines = [`<span>${symbol}</span>`];
 
   if (message.resumption_quote_time) {
-    lines.push('<span class="dot dot-1">Открытие книги заявок</span>');
+    lines.push('<div class="control-line" style="align-items: center;"><span class="dot dot-1"></span><span>Открытие книги заявок</span></div>');
   }
 
   if (message.resumption_trade_time) {
-    lines.push('<span class="dot dot-2">Возобновление торгов</span>');
+    lines.push('<div class="control-line" style="align-items: center;"><span class="dot dot-2"></span><span>Возобновление торгов</span></div>');
   }
 
   if (lines.length > 1) {
