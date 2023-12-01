@@ -23,6 +23,7 @@ const [
   import(`${ppp.rootUrl}/elements/button.js`),
   import(`${ppp.rootUrl}/elements/checkbox.js`),
   import(`${ppp.rootUrl}/elements/snippet.js`),
+  import(`${ppp.rootUrl}/elements/tabs.js`),
   import(`${ppp.rootUrl}/elements/text-field.js`),
   import(`${ppp.rootUrl}/elements/query-select.js`),
   import(`${ppp.rootUrl}/elements/widget-controls.js`)
@@ -92,6 +93,9 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
 
   #cardDimmerInterval;
 
+  // Use this as a generic source storage.
+  alternativeSources = new Set();
+
   constructor() {
     super();
 
@@ -130,7 +134,6 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
     );
 
     this.#cardDimmerInterval = setInterval(() => this.dimCards(), 750);
-
     this.messages = await this.#historyRequest();
     this.pusherHandler = this.pusherHandler.bind(this);
 
@@ -186,7 +189,7 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
 
       Array.from(newCards).forEach((card) => {
         const cursor = card.closest('[cursor]')?.getAttribute('cursor');
-        const message = this.messages.find((m) => m.cursor === cursor);
+        const message = this.messages.find((m) => m.cursor?.toString() === cursor);
 
         if (message) {
           if (
@@ -242,39 +245,42 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
     return this.#messageFormatter.call(this, event, message, html);
   }
 
-  async pusherHandler(event, message) {
-    if (event && !/^pusher:/i.test(event)) {
-      let formatted = await this.formatMessage(event, message);
+  async generatePrivateEvent(event, message) {
+    let formatted = await this.formatMessage(event, message);
 
-      if (typeof formatted?.cursor !== 'undefined') {
-        if (
-          this.document.autoSelectInstrument &&
-          formatted?.symbols?.length === 1
-        ) {
-          this.selectInstrument(formatted.symbols[0]);
-        }
+    if (typeof formatted?.cursor !== 'undefined') {
+      if (
+        this.document.autoSelectInstrument &&
+        formatted?.symbols?.length === 1
+      ) {
+        this.selectInstrument(formatted.symbols[0]);
+      }
 
-        // Possible icon change
-        formatted = await this.formatMessage(event, message);
+      // Possible icon change
+      formatted = await this.formatMessage(event, message);
 
-        if (
-          this.document.disableInstrumentFiltering ||
-          !this.instrument ||
-          formatted?.symbols?.indexOf?.(
-            this.instrumentTrader?.getSymbol?.(this.instrument)
-          ) > -1
-        ) {
-          formatted.pppInsertionTimestamp = Date.now();
+      if (
+        this.document.disableInstrumentFiltering ||
+        !this.instrument ||
+        formatted?.symbols?.indexOf?.(
+          this.instrumentTrader?.getSymbol?.(this.instrument)
+        ) > -1
+      ) {
+        formatted.pppInsertionTimestamp = Date.now();
 
-          this.messages.unshift(formatted);
-          Observable.notify(this, 'messages');
-        }
+        this.messages.unshift(formatted);
+        Observable.notify(this, 'messages');
       }
     }
   }
 
+  async pusherHandler(event, message) {
+    if (event && !/^pusher:/i.test(event)) {
+      return this.generatePrivateEvent(event, message);
+    }
+  }
+
   async validate() {
-    await validate(this.container.pusherApiId);
     await validate(this.container.depth);
     await validate(this.container.depth, {
       hook: async (value) => +value > 0 && +value <= 100,
@@ -342,214 +348,237 @@ export async function widgetDefinition({ baseWidgetUrl }) {
     minHeight: 120,
     defaultWidth: 345,
     settings: html`
-      <div class="widget-settings-section">
-        <div class="widget-settings-label-group">
-          <h5>Интеграция с Pusher</h5>
-        </div>
-        <div class="widget-settings-input-group">
-          <div class="control-line flex-start">
-            <ppp-query-select
-              ${ref('pusherApiId')}
-              standalone
-              value="${(x) => x.document.pusherApiId}"
-              :context="${(x) => x}"
-              :preloaded="${(x) => x.document.pusherApi ?? ''}"
-              :query="${() => {
-                return (context) => {
-                  return context.services
-                    .get('mongodb-atlas')
-                    .db('ppp')
-                    .collection('apis')
-                    .find({
-                      $and: [
-                        {
-                          type: `[%#(await import(ppp.rootUrl + '/lib/const.js')).APIS.PUSHER%]`
-                        },
-                        {
-                          $or: [
-                            { removed: { $ne: true } },
+      <ppp-tabs activeid="integrations">
+        <ppp-tab id="integrations">Подключения</ppp-tab>
+        <ppp-tab id="source">Источник</ppp-tab>
+        <ppp-tab id="ui">UI</ppp-tab>
+        <ppp-tab id="filters" disabled>Фильтры</ppp-tab>
+        <ppp-tab-panel id="integrations-panel">
+          <div class="widget-settings-section">
+            <div class="widget-settings-label-group">
+              <h5>Интеграция с Pusher</h5>
+              <p class="description">
+                Если не заполнять поле, подключения не будет.
+              </p>
+            </div>
+            <div class="widget-settings-input-group">
+              <div class="control-line flex-start">
+                <ppp-query-select
+                  ${ref('pusherApiId')}
+                  deselectable
+                  standalone
+                  placeholder="Опционально, нажмите для выбора"
+                  value="${(x) => x.document.pusherApiId}"
+                  :context="${(x) => x}"
+                  :preloaded="${(x) => x.document.pusherApi ?? ''}"
+                  :query="${() => {
+                    return (context) => {
+                      return context.services
+                        .get('mongodb-atlas')
+                        .db('ppp')
+                        .collection('apis')
+                        .find({
+                          $and: [
                             {
-                              _id: `[%#this.document.pusherApiId ?? ''%]`
+                              type: `[%#(await import(ppp.rootUrl + '/lib/const.js')).APIS.PUSHER%]`
+                            },
+                            {
+                              $or: [
+                                { removed: { $ne: true } },
+                                {
+                                  _id: `[%#this.document.pusherApiId ?? ''%]`
+                                }
+                              ]
                             }
                           ]
-                        }
-                      ]
-                    })
-                    .sort({ updatedAt: -1 });
-                };
-              }}"
-              :transform="${() => ppp.decryptDocumentsTransformation()}"
-            ></ppp-query-select>
-            <ppp-button
-              appearance="default"
-              @click="${() =>
-                window.open('?page=api-pusher', '_blank').focus()}"
-            >
-              +
-            </ppp-button>
+                        })
+                        .sort({ updatedAt: -1 });
+                    };
+                  }}"
+                  :transform="${() => ppp.decryptDocumentsTransformation()}"
+                ></ppp-query-select>
+                <ppp-button
+                  appearance="default"
+                  @click="${() =>
+                    window.open('?page=api-pusher', '_blank').focus()}"
+                >
+                  +
+                </ppp-button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-      <div class="widget-settings-section">
-        <div class="widget-settings-label-group">
-          <h5>Трейдер</h5>
-          <p class="description">
-            Трейдер для поиска и переключения инструмента.
-          </p>
-        </div>
-        <div class="control-line flex-start">
-          <ppp-query-select
-            ${ref('instrumentTraderId')}
-            standalone
-            deselectable
-            placeholder="Опционально, нажмите для выбора"
-            value="${(x) => x.document.instrumentTraderId}"
-            :context="${(x) => x}"
-            :preloaded="${(x) => x.document.instrumentTrader ?? ''}"
-            :query="${() => {
-              return (context) => {
-                return context.services
-                  .get('mongodb-atlas')
-                  .db('ppp')
-                  .collection('traders')
-                  .find({
-                    $or: [
-                      { removed: { $ne: true } },
-                      { _id: `[%#this.document.instrumentTraderId ?? ''%]` }
-                    ]
-                  })
-                  .sort({ updatedAt: -1 });
-              };
-            }}"
-            :transform="${() => ppp.decryptDocumentsTransformation()}"
-          ></ppp-query-select>
-          <ppp-button
-            appearance="default"
-            @click="${() => window.open('?page=trader', '_blank').focus()}"
-          >
-            +
-          </ppp-button>
-        </div>
-      </div>
-      <div class="widget-settings-section">
-        <div class="widget-settings-label-group">
-          <h5>Количество сообщений для отображения</h5>
-          <p class="description">
-            Максимальное количество сообщений для единовременного отображения.
-          </p>
-        </div>
-        <div class="widget-settings-input-group">
-          <ppp-text-field
-            type="number"
-            placeholder="50"
-            value="${(x) => x.document.depth ?? 50}"
-            ${ref('depth')}
-          ></ppp-text-field>
-        </div>
-      </div>
-      <div class="widget-settings-section">
-        <div class="widget-settings-label-group">
-          <h5>Время подсветки новых сообщений</h5>
-          <p class="description">
-            Время, в течение которое новое входящее сообщение будет выделено
-            цветом. Задаётся в секундах.
-          </p>
-        </div>
-        <div class="widget-settings-input-group">
-          <ppp-text-field
-            type="number"
-            placeholder="5"
-            value="${(x) => x.document.newTimeout ?? 5}"
-            ${ref('newTimeout')}
-          ></ppp-text-field>
-        </div>
-      </div>
-      <div class="widget-settings-section">
-        <div class="widget-settings-label-group">
-          <h5>Форматирование сообщений</h5>
-          <p class="description">
-            Тело функции для форматирования сообщений, поступающих от Pusher.
-          </p>
-        </div>
-        <div class="widget-settings-input-group">
-          <ppp-snippet
-            wizard
-            revertable
-            @wizard="${(x, c) => {
-              x.templateLibraryModal.removeAttribute('hidden');
+          <div class="widget-settings-section">
+            <div class="widget-settings-label-group">
+              <h5>Трейдер инструментов</h5>
+              <p class="description">
+                Трейдер для поиска и переключения инструмента.
+              </p>
+            </div>
+            <div class="control-line flex-start">
+              <ppp-query-select
+                ${ref('instrumentTraderId')}
+                standalone
+                deselectable
+                placeholder="Опционально, нажмите для выбора"
+                value="${(x) => x.document.instrumentTraderId}"
+                :context="${(x) => x}"
+                :preloaded="${(x) => x.document.instrumentTrader ?? ''}"
+                :query="${() => {
+                  return (context) => {
+                    return context.services
+                      .get('mongodb-atlas')
+                      .db('ppp')
+                      .collection('traders')
+                      .find({
+                        $or: [
+                          { removed: { $ne: true } },
+                          { _id: `[%#this.document.instrumentTraderId ?? ''%]` }
+                        ]
+                      })
+                      .sort({ updatedAt: -1 });
+                  };
+                }}"
+                :transform="${() => ppp.decryptDocumentsTransformation()}"
+              ></ppp-query-select>
+              <ppp-button
+                appearance="default"
+                @click="${() => window.open('?page=trader', '_blank').focus()}"
+              >
+                +
+              </ppp-button>
+            </div>
+          </div>
+        </ppp-tab-panel>
+        <ppp-tab-panel id="source-panel">
+          <div class="widget-settings-section">
+            <div class="widget-settings-label-group">
+              <h5>Форматирование сообщений</h5>
+              <p class="description">
+                Тело функции для форматирования сообщений, поступающих от
+                Pusher.
+              </p>
+            </div>
+            <div class="widget-settings-input-group">
+              <ppp-snippet
+                wizard
+                revertable
+                @wizard="${(x, c) => {
+                  x.templateLibraryModal.removeAttribute('hidden');
 
-              x.templateLibraryModalPage.template =
-                x.templateLibraryModalPage.template ?? 'thefly';
-              x.templateLibraryModalPage.hint = 'formatter';
-              x.templateLibraryModalPage.baseUrl = baseWidgetUrl.replace(
-                '/widgets',
-                ''
-              );
-              x.templateLibraryModalPage.destination = c.event.detail.snippet;
-            }}"
-            @revert="${(x) => {
-              x.formatterCode.updateCode(defaultFormatterCode);
-            }}"
-            :code="${(x) => x.document.formatterCode ?? defaultFormatterCode}"
-            ${ref('formatterCode')}
-          ></ppp-snippet>
-        </div>
-      </div>
-      <div class="widget-settings-section">
-        <div class="widget-settings-label-group">
-          <h5>Загрузка исторических данных</h5>
-          <p class="description">
-            Тело функции, предоставляющей исторические данные, загружаемые при
-            начальном отображении и смене инструмента виджета.
-          </p>
-        </div>
-        <div class="widget-settings-input-group">
-          <ppp-snippet
-            wizard
-            revertable
-            @wizard="${(x, c) => {
-              x.templateLibraryModal.removeAttribute('hidden');
+                  x.templateLibraryModalPage.template =
+                    x.templateLibraryModalPage.template ?? 'thefly';
+                  x.templateLibraryModalPage.hint = 'formatter';
+                  x.templateLibraryModalPage.baseUrl = baseWidgetUrl.replace(
+                    '/widgets',
+                    ''
+                  );
+                  x.templateLibraryModalPage.destination =
+                    c.event.detail.snippet;
+                }}"
+                @revert="${(x) => {
+                  x.formatterCode.updateCode(defaultFormatterCode);
+                }}"
+                :code="${(x) =>
+                  x.document.formatterCode ?? defaultFormatterCode}"
+                ${ref('formatterCode')}
+              ></ppp-snippet>
+            </div>
+          </div>
+          <div class="widget-settings-section">
+            <div class="widget-settings-label-group">
+              <h5>Загрузка исторических данных</h5>
+              <p class="description">
+                Тело функции, предоставляющей исторические данные, загружаемые
+                при начальном отображении и смене инструмента виджета.
+              </p>
+            </div>
+            <div class="widget-settings-input-group">
+              <ppp-snippet
+                wizard
+                revertable
+                @wizard="${(x, c) => {
+                  x.templateLibraryModal.removeAttribute('hidden');
 
-              x.templateLibraryModalPage.template =
-                x.templateLibraryModalPage.template ?? 'thefly';
-              x.templateLibraryModalPage.hint = 'history';
-              x.templateLibraryModalPage.baseUrl = baseWidgetUrl.replace(
-                '/widgets',
-                ''
-              );
-              x.templateLibraryModalPage.destination = c.event.detail.snippet;
-            }}"
-            @revert="${(x) => {
-              x.historyCode.updateCode(defaultHistoryCode);
-            }}"
-            :code="${(x) => x.document.historyCode ?? defaultHistoryCode}"
-            ${ref('historyCode')}
-          ></ppp-snippet>
-        </div>
-      </div>
-      <div class="widget-settings-section">
-        <div class="widget-settings-label-group">
-          <h5>Параметры отображения и работы</h5>
-        </div>
-        <ppp-checkbox
-          ?checked="${(x) => x.document.autoSelectInstrument}"
-          ${ref('autoSelectInstrument')}
-        >
-          Переключать инструмент при новых сообщениях
-        </ppp-checkbox>
-        <ppp-checkbox
-          ?checked="${(x) => x.document.disableInstrumentFiltering}"
-          ${ref('disableInstrumentFiltering')}
-        >
-          Не фильтровать содержимое по выбранному инструменту
-        </ppp-checkbox>
-        <ppp-checkbox
-          ?checked="${(x) => x.document.multiline}"
-          ${ref('multiline')}
-        >
-          Переносить текст заголовков на несколько строк
-        </ppp-checkbox>
-      </div>
+                  x.templateLibraryModalPage.template =
+                    x.templateLibraryModalPage.template ?? 'thefly';
+                  x.templateLibraryModalPage.hint = 'history';
+                  x.templateLibraryModalPage.baseUrl = baseWidgetUrl.replace(
+                    '/widgets',
+                    ''
+                  );
+                  x.templateLibraryModalPage.destination =
+                    c.event.detail.snippet;
+                }}"
+                @revert="${(x) => {
+                  x.historyCode.updateCode(defaultHistoryCode);
+                }}"
+                :code="${(x) => x.document.historyCode ?? defaultHistoryCode}"
+                ${ref('historyCode')}
+              ></ppp-snippet>
+            </div>
+          </div>
+        </ppp-tab-panel>
+        <ppp-tab-panel id="ui-panel">
+          <div class="widget-settings-section">
+            <div class="widget-settings-label-group">
+              <h5>Количество сообщений для отображения</h5>
+              <p class="description">
+                Максимальное количество сообщений для единовременного
+                отображения.
+              </p>
+            </div>
+            <div class="widget-settings-input-group">
+              <ppp-text-field
+                type="number"
+                placeholder="50"
+                value="${(x) => x.document.depth ?? 50}"
+                ${ref('depth')}
+              ></ppp-text-field>
+            </div>
+          </div>
+          <div class="widget-settings-section">
+            <div class="widget-settings-label-group">
+              <h5>Время подсветки новых сообщений</h5>
+              <p class="description">
+                Время, в течение которое новое входящее сообщение будет выделено
+                цветом. Задаётся в секундах.
+              </p>
+            </div>
+            <div class="widget-settings-input-group">
+              <ppp-text-field
+                type="number"
+                placeholder="5"
+                value="${(x) => x.document.newTimeout ?? 5}"
+                ${ref('newTimeout')}
+              ></ppp-text-field>
+            </div>
+          </div>
+          <div class="widget-settings-section">
+            <div class="widget-settings-label-group">
+              <h5>Другие параметры интерфейса</h5>
+            </div>
+            <ppp-checkbox
+              ?checked="${(x) => x.document.autoSelectInstrument}"
+              ${ref('autoSelectInstrument')}
+            >
+              Переключать инструмент при новых сообщениях
+            </ppp-checkbox>
+            <ppp-checkbox
+              ?checked="${(x) => x.document.disableInstrumentFiltering}"
+              ${ref('disableInstrumentFiltering')}
+            >
+              Не фильтровать содержимое по выбранному инструменту
+            </ppp-checkbox>
+            <ppp-checkbox
+              ?checked="${(x) => x.document.multiline}"
+              ${ref('multiline')}
+            >
+              Переносить текст заголовков на несколько строк
+            </ppp-checkbox>
+          </div>
+        </ppp-tab-panel>
+        <ppp-tab-panel id="filters-panel"></ppp-tab-panel>
+      </ppp-tabs>
     `
   };
 }

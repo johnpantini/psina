@@ -82,7 +82,18 @@ return {
   message,
   symbols,
   layout: html`
-    <div class="widget-card-holder">
+    <div
+      class="widget-card-holder"
+      hidden="${(x, c) => {
+        if (c.parent.instrumentTrader && !instrument) {
+          return true;
+        }
+
+        if (instrument && ['SVA', 'YNDX', 'QIWI'].includes(instrument.symbol)) {
+          return true;
+        }
+      }}"
+    >
       <div class="widget-card-holder-inner">
         <ppp-widget-card
           ?clickable="${() => instrument && symbol}"
