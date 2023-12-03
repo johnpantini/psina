@@ -97,6 +97,27 @@ if (channels.indexOf('Earnings') > -1) {
 function composeLeftExtraSubtitle(message) {
   const lines = [];
 
+  const date = new Date(message.t);
+  const today = new Date();
+  const isToday =
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear();
+
+  if (isToday) {
+    lines.push(
+      `<div class="control-line" style="align-items: center;"><span class="dot dot-2"></span><span style="color: var(--palette-green-dark-2-with-palette-green-light-2);">Сегодня</span></div>`
+    );
+  } else if (
+    date.getDate() === today.getDate() - 1 &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  ) {
+    lines.push(
+      `<div class="control-line" style="align-items: center;"><span class="dot dot-4"></span><span style="color: var(--palette-yellow-dark-2-with-palette-yellow-light-2);">Вчера</span></div>`
+    );
+  }
+
   if (message.u) {
     lines.push(
       `<a class="link" target="_blank" rel="noopener" href="${message.u}">Перейти по ссылке</a>`
