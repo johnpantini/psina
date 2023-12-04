@@ -2,8 +2,7 @@ const { environmentCode, environmentCodeSecret } = [%#JSON.stringify(
   await (async () => {
     const service = await ppp.user.functions.findOne(
       { collection: 'services' },
-      { _id: '@@SERVICE_ID' },
-      { environmentCode: 1, environmentCodeSecret: 1 }
+      { _id: '@@SERVICE_ID' }
     );
 
     return await ppp.decrypt(service);
