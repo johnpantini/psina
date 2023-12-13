@@ -350,7 +350,7 @@ export async function widgetDefinition({ baseWidgetUrl }) {
     settings: html`
       <ppp-tabs activeid="integrations">
         <ppp-tab id="integrations">Подключения</ppp-tab>
-        <ppp-tab id="source">Источник</ppp-tab>
+        <ppp-tab id="formatters">Форматирование</ppp-tab>
         <ppp-tab id="ui">UI</ppp-tab>
         <ppp-tab id="filters" disabled>Фильтры</ppp-tab>
         <ppp-tab-panel id="integrations-panel">
@@ -449,7 +449,7 @@ export async function widgetDefinition({ baseWidgetUrl }) {
             </div>
           </div>
         </ppp-tab-panel>
-        <ppp-tab-panel id="source-panel">
+        <ppp-tab-panel id="formatters-panel">
           <div class="widget-settings-section">
             <div class="widget-settings-label-group">
               <h5>Форматирование сообщений</h5>
