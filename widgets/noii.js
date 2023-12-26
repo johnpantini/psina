@@ -248,6 +248,8 @@ export class NOIIWidget extends WidgetWithInstrument {
         noii: TRADER_DATUM.NOII
       }
     });
+
+    return super.disconnectedCallback();
   }
 
   getGradientCSS() {
