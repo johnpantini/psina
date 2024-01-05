@@ -341,7 +341,7 @@ export async function widgetDefinition() {
       template: noiiWidgetTemplate,
       styles: noiiWidgetStyles
     }).define(),
-    minWidth: 275,
+    minWidth: 200,
     minHeight: 120,
     defaultWidth: 275,
     settings: html`
