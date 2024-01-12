@@ -82,6 +82,10 @@ export const pusherSubscriptionWidgetStyles = css`
     padding-bottom: 2px;
   }
 
+  .dot-divider {
+    margin: 0 4px;
+  }
+
   ${scrollbars('.x-scroll')}
 `;
 
