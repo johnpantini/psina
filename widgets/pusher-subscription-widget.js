@@ -118,37 +118,42 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
     }
 
     this.messages = [];
-    this.instrumentTrader = await ppp.getOrCreateTrader(
-      this.document.instrumentTrader
-    );
 
-    this.selectInstrument(this.document.symbol, { isolate: true });
-
-    const bodyCode = await new Tmpl().render(
-      this,
-      this.document?.formatterCode ?? '',
-      {}
-    );
-
-    this.#messageFormatter = new AsyncFunction(
-      'event',
-      'message',
-      'html',
-      bodyCode
-    );
-
-    this.#cardDimmerInterval = setInterval(() => this.dimCards(), 750);
-    this.messages = await this.#historyRequest();
-    this.pusherHandler = this.pusherHandler.bind(this);
-
-    if (this.document.pusherApi) {
-      const connection = await ppp.getOrCreatePusherConnection(
-        this.document.pusherApi
+    try {
+      this.instrumentTrader = await ppp.getOrCreateTrader(
+        this.document.instrumentTrader
       );
 
-      if (connection) {
-        connection.channel('ppp')?.bind_global(this.pusherHandler);
+      this.selectInstrument(this.document.symbol, { isolate: true });
+
+      const bodyCode = await new Tmpl().render(
+        this,
+        this.document?.formatterCode ?? '',
+        {}
+      );
+
+      this.#messageFormatter = new AsyncFunction(
+        'event',
+        'message',
+        'html',
+        bodyCode
+      );
+
+      this.#cardDimmerInterval = setInterval(() => this.dimCards(), 750);
+      this.messages = await this.#historyRequest();
+      this.pusherHandler = this.pusherHandler.bind(this);
+
+      if (this.document.pusherApi) {
+        const connection = await ppp.getOrCreatePusherConnection(
+          this.document.pusherApi
+        );
+
+        if (connection) {
+          connection.channel('ppp')?.bind_global(this.pusherHandler);
+        }
       }
+    } catch (e) {
+      return this.catchException(e);
     }
   }
 
@@ -193,7 +198,9 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
 
       Array.from(newCards).forEach((card) => {
         const cursor = card.closest('[cursor]')?.getAttribute('cursor');
-        const message = this.messages.find((m) => m.cursor?.toString() === cursor);
+        const message = this.messages.find(
+          (m) => m.cursor?.toString() === cursor
+        );
 
         if (message) {
           if (
