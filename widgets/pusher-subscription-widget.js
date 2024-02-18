@@ -358,6 +358,7 @@ export async function widgetDefinition({ baseWidgetUrl }) {
     minWidth: 150,
     minHeight: 120,
     defaultWidth: 345,
+    defaultHeight: 350,
     settings: html`
       <ppp-tabs activeid="integrations">
         <ppp-tab id="integrations">Подключения</ppp-tab>
