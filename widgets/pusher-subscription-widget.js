@@ -52,9 +52,9 @@ export const pusherSubscriptionWidgetTemplate = html`
               html` <div cursor="${(x) => x.cursor}">${(x) => x.layout}</div>`
             )}
           </div>
-        </div>
-        <ppp-widget-notifications-area></ppp-widget-notifications-area>
+        </div>        
       </div>
+      <ppp-widget-notifications-area></ppp-widget-notifications-area>
       <ppp-widget-resize-controls></ppp-widget-resize-controls>
     </div>
   </template>
