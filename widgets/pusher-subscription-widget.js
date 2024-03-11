@@ -52,7 +52,7 @@ export const pusherSubscriptionWidgetTemplate = html`
               html` <div cursor="${(x) => x.cursor}">${(x) => x.layout}</div>`
             )}
           </div>
-        </div>        
+        </div>
       </div>
       <ppp-widget-notifications-area></ppp-widget-notifications-area>
       <ppp-widget-resize-controls></ppp-widget-resize-controls>
@@ -472,6 +472,7 @@ export async function widgetDefinition({ baseWidgetUrl }) {
             </div>
             <div class="widget-settings-input-group">
               <ppp-snippet
+                standalone
                 wizard
                 revertable
                 @wizard="${(x, c) => {
@@ -506,6 +507,7 @@ export async function widgetDefinition({ baseWidgetUrl }) {
             </div>
             <div class="widget-settings-input-group">
               <ppp-snippet
+                standalone
                 wizard
                 revertable
                 @wizard="${(x, c) => {
@@ -541,6 +543,7 @@ export async function widgetDefinition({ baseWidgetUrl }) {
             </div>
             <div class="widget-settings-input-group">
               <ppp-text-field
+                standalone
                 type="number"
                 placeholder="50"
                 value="${(x) => x.document.depth ?? 50}"
@@ -558,6 +561,7 @@ export async function widgetDefinition({ baseWidgetUrl }) {
             </div>
             <div class="widget-settings-input-group">
               <ppp-text-field
+                standalone
                 type="number"
                 placeholder="5"
                 value="${(x) => x.document.newTimeout ?? 5}"
@@ -569,6 +573,7 @@ export async function widgetDefinition({ baseWidgetUrl }) {
             <div class="widget-settings-label-group">
               <h5>Другие параметры интерфейса</h5>
             </div>
+            <div class="spacing2"></div>
             <ppp-checkbox
               ?checked="${(x) => x.document.autoSelectInstrument}"
               ${ref('autoSelectInstrument')}

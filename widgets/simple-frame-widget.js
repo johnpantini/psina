@@ -288,6 +288,7 @@ export async function widgetDefinition() {
         </div>
         <div class="widget-settings-input-group">
           <ppp-text-field
+            standalone
             type="url"
             placeholder="https://example.com"
             value="${(x) => x.document.frameUrl ?? ''}"
@@ -359,6 +360,7 @@ export async function widgetDefinition() {
         </div>
         <div class="widget-settings-input-group">
           <ppp-snippet
+            standalone
             :code="${(x) => x.document.extraOptions ?? '{}'}"
             ${ref('extraOptions')}
           ></ppp-snippet>
