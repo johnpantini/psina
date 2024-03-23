@@ -74,7 +74,7 @@ const [results] =
             serviceCredentials.api.user
           }:${encodeURIComponent(
             serviceCredentials.api.password
-          )}@db.${hostname}:${serviceCredentials.api.port}/${
+          )}@${serviceCredentials.api.hostname}:${serviceCredentials.api.port}/${
             serviceCredentials.api.db
           }`
         })
