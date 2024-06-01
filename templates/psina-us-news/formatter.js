@@ -106,7 +106,7 @@ function composeLeftExtraSubtitle(message) {
 
   if (isToday) {
     lines.push(
-      `<div class="control-line" style="align-items: center;"><span class="dot dot-2"></span><span style="color: var(--palette-green-dark-2-with-palette-green-light-2);">Сегодня</span></div>`
+      `<div class="control-line centered"><span class="dot dot-2"></span><span style="color: var(--palette-green-dark-2-with-palette-green-light-2);">Сегодня</span></div>`
     );
   } else if (
     date.getDate() === today.getDate() - 1 &&
@@ -114,7 +114,7 @@ function composeLeftExtraSubtitle(message) {
     date.getFullYear() === today.getFullYear()
   ) {
     lines.push(
-      `<div class="control-line" style="align-items: center;"><span class="dot dot-4"></span><span style="color: var(--palette-yellow-dark-2-with-palette-yellow-light-2);">Вчера</span></div>`
+      `<div class="control-line centered"><span class="dot dot-4"></span><span style="color: var(--palette-yellow-dark-2-with-palette-yellow-light-2);">Вчера</span></div>`
     );
   }
 
@@ -135,7 +135,7 @@ function composeLeftExtraSubtitle(message) {
   }
 
   return staticallyCompose(`
-    <div style="display:flex; flex-direction: column; gap: 1px">
+    <div class="subtitle-rows">
       ${lines.join('\n')}
     </div>
   `);
@@ -159,7 +159,7 @@ function composeRightExtraSubtitle(message) {
   }
 
   return staticallyCompose(`
-    <div style="display:flex; flex-direction: column; gap: 1px">
+    <div class="subtitle-rows">
       ${lines.join('\n')}
     </div>
   `);
