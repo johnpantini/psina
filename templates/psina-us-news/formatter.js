@@ -45,7 +45,7 @@ if (!this.hasAttribute('listening')) {
           );
 
           if (summaryRequest.ok) {
-            const { status, sharing_url } = await summaryRequest.json();
+            const { sharing_url } = await summaryRequest.json();
 
             window.open(
               sharing_url,
@@ -106,7 +106,9 @@ function composeLeftExtraSubtitle(message) {
 
   if (isToday) {
     lines.push(
-      `<div class="control-line centered"><span class="dot dot-2"></span><span style="color: var(--palette-green-dark-2-with-palette-green-light-2);">Сегодня</span></div>`
+      `<div class="control-line centered"><span class="dot dot-2"></span><span style="color: var(--palette-green-dark-2-with-palette-green-light-2);">${ppp.t(
+        '$g.today'
+      )}</span></div>`
     );
   } else if (
     date.getDate() === today.getDate() - 1 &&
@@ -114,20 +116,22 @@ function composeLeftExtraSubtitle(message) {
     date.getFullYear() === today.getFullYear()
   ) {
     lines.push(
-      `<div class="control-line centered"><span class="dot dot-4"></span><span style="color: var(--palette-yellow-dark-2-with-palette-yellow-light-2);">Вчера</span></div>`
+      `<div class="control-line centered"><span class="dot dot-4"></span><span style="color: var(--palette-yellow-dark-2-with-palette-yellow-light-2);">${ppp.t(
+        '$g.yesterday'
+      )}</span></div>`
     );
   }
 
   if (message.u) {
     lines.push(
-      `<a class="link" target="_blank" rel="noopener" href="${message.u}">Перейти по ссылке</a>`
+      `<a class="link" target="_blank" rel="noopener" href="${message.u}">Open in new tab</a>`
     );
   }
 
   if (message.b) {
     lines.push(`<span class="link clickable" onclick="event.composedPath().find(n =>
                       n?.tagName?.toLowerCase?.() === 'ppp-pusher-subscription-widget')
-                      ?.showIframeModal('${message.i}'); event.stopPropagation()">Открыть подробности</span>`);
+                      ?.showIframeModal('${message.i}'); event.stopPropagation()">Show details</span>`);
   }
 
   if (!lines.length) {
@@ -152,7 +156,11 @@ function composeRightExtraSubtitle(message) {
     if (extractionEndpoint && yandexToken) {
       lines.push(`<span class="link clickable" onclick="event.composedPath().find(n =>
                       n?.tagName?.toLowerCase?.() === 'ppp-pusher-subscription-widget')
-                      ?.showIframeModal('${message.i}', true); event.stopPropagation()">Пересказ</span>`);
+                      ?.showIframeModal('${
+                        message.i
+                      }', true); event.stopPropagation()">${ppp.t(
+        '$g.summary'
+      )}</span>`);
     } else {
       lines.push(`<span>&nbsp;</span>`);
     }

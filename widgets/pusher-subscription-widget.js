@@ -30,8 +30,11 @@ const [
 ]);
 
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+const i18n = await import(
+  `../i18n/${ppp.locale}/widgets/pusher-subscription-widget.i18n.js`
+);
 
-await import(`${ppp.rootUrl}/elements/pages/iframe-modal.js`);
+i18n.default(ppp.dict);
 
 export const pusherSubscriptionWidgetTemplate = html`
   <template>
@@ -43,7 +46,7 @@ export const pusherSubscriptionWidgetTemplate = html`
           ${when(
             (x) => !x?.messages?.length,
             html`${html.partial(
-              widgetEmptyStateTemplate('Нет данных для отображения.')
+              widgetEmptyStateTemplate('No data to display.')
             )}`
           )}
           <div class="widget-card-list-inner" ${ref('cardList')}>
