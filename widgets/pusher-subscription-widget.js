@@ -42,11 +42,21 @@ export const pusherSubscriptionWidgetTemplate = html`
       ${widgetDefaultHeaderTemplate()}
       <div class="widget-body">
         ${widgetStackSelectorTemplate()}
-        <div class="widget-card-list">
+        ${when(
+          (x) => !x.initialized,
+          html`${html.partial(
+            widgetEmptyStateTemplate(ppp.t('$widget.emptyState.loading'), {
+              extraClass: 'loading-animation'
+            })
+          )}`
+        )}
+        <div class="widget-card-list" ?hidden="${(x) => !x.initialized}">
           ${when(
             (x) => !x?.messages?.length,
             html`${html.partial(
-              widgetEmptyStateTemplate('No data to display.')
+              widgetEmptyStateTemplate(
+                ppp.t('$widget.emptyState.noDataToDisplay')
+              )
             )}`
           )}
           <div class="widget-card-list-inner" ${ref('cardList')}>
@@ -155,7 +165,11 @@ export class PusherSubscriptionWidget extends WidgetWithInstrument {
           connection.channel('ppp')?.bind_global(this.pusherHandler);
         }
       }
+
+      this.initialized = true;
     } catch (e) {
+      this.initialized = true;
+
       return this.catchException(e);
     }
   }

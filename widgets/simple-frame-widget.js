@@ -96,6 +96,8 @@ export class SimpleFrameWidget extends WidgetWithInstrument {
 
       this.selectInstrument(this.document.symbol, { isolate: true });
     }
+
+    this.initialized = true;
   }
 
   disconnectedCallback() {

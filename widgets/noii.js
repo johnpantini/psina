@@ -120,7 +120,7 @@ export const noiiWidgetTemplate = html`
               </div>
             </div>
           </div>
-        `)}        
+        `)}
       </div>
       <ppp-widget-notifications-area></ppp-widget-notifications-area>
       <ppp-widget-resize-controls></ppp-widget-resize-controls>
@@ -217,6 +217,8 @@ export class NOIIWidget extends WidgetWithInstrument {
     this.noiiTab = this.document.activeTab;
 
     if (!this.document.instrumentTrader) {
+      this.initialized = true;
+
       return this.notificationsArea.error({
         text: 'Отсутствует трейдер для поиска инструментов.',
         keep: true
@@ -236,7 +238,10 @@ export class NOIIWidget extends WidgetWithInstrument {
           noii: TRADER_DATUM.NOII
         }
       });
+      this.initialized = true;
     } catch (e) {
+      this.initialized = true;
+
       return this.catchException(e);
     }
   }

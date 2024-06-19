@@ -49,6 +49,12 @@ export const migrationWidgetStyles = css`
 `;
 
 export class MigrationWidget extends WidgetWithInstrument {
+  async connectedCallback() {
+    super.connectedCallback();
+
+    this.initialized = true;
+  }
+
   async migrate() {
     this.container.beginOperation();
 

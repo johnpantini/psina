@@ -24,7 +24,7 @@ if (!this.hasAttribute('listening')) {
         if (!gpt) {
           const page = await ppp.app.mountPage('iframe-modal', {
             size: 'xxlarge',
-            title: 'Подробности'
+            title: ppp.t('$g.details')
           });
 
           page.src = page.generateHtml(m.message.b);
@@ -124,14 +124,20 @@ function composeLeftExtraSubtitle(message) {
 
   if (message.u) {
     lines.push(
-      `<a class="link" target="_blank" rel="noopener" href="${message.u}">Open in new tab</a>`
+      `<a class="link" target="_blank" rel="noopener" href="${
+        message.u
+      }">${ppp.t('$g.openInNewTab')}</a>`
     );
   }
 
   if (message.b) {
     lines.push(`<span class="link clickable" onclick="event.composedPath().find(n =>
                       n?.tagName?.toLowerCase?.() === 'ppp-pusher-subscription-widget')
-                      ?.showIframeModal('${message.i}'); event.stopPropagation()">Show details</span>`);
+                      ?.showIframeModal('${
+                        message.i
+                      }'); event.stopPropagation()">${ppp.t(
+      '$g.showDetails'
+    )}</span>`);
   }
 
   if (!lines.length) {
