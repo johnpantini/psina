@@ -294,7 +294,10 @@ class PsinaTrader extends Trader {
               } else if (payload.T === 't') {
                 this.datums[TRADER_DATUM.TIMELINE_ITEM].dataArrived(payload);
               } else if (payload.T === 'error') {
-                if (payload.code === 407) {
+                if (
+                  payload.code === 407 ||
+                  (payload.code === 403 && payload.msg === 'not ready yet')
+                ) {
                   continue;
                 } else if (payload.code === 406) {
                   this.authenticated = false;
