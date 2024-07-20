@@ -9,20 +9,14 @@ const [
     widgetStackSelectorTemplate
   },
   { WidgetColumns },
-  { emptyWidgetState },
-  { staticallyCompose },
   { css, html, ref, when, observable, repeat },
-  { validate, invalidate },
   { formatDate, formatNumber, formatAmount, formatPercentage },
   { WIDGET_TYPES, TRADER_DATUM, COLUMN_SOURCE },
   { normalize, typography, getTraderSelectOptionColor }
 ] = await Promise.all([
   import(`${ppp.rootUrl}/elements/widget.js`),
   import(`${ppp.rootUrl}/elements/widget-columns.js`),
-  import(`${ppp.rootUrl}/static/svg/sprite.js`),
-  import(`${ppp.rootUrl}/vendor/fast-utilities.js`),
   import(`${ppp.rootUrl}/vendor/fast-element.min.js`),
-  import(`${ppp.rootUrl}/lib/ppp-errors.js`),
   import(`${ppp.rootUrl}/lib/intl.js`),
   import(`${ppp.rootUrl}/lib/const.js`),
   import(`${ppp.rootUrl}/design/styles.js`),
@@ -241,14 +235,6 @@ export const psinaWidgetTemplate = html`
                       </div>
                       <div class="widget-summary-line">
                         <div class="control-line">
-                          <span>Мой PnL</span>
-                        </div>
-                        <span>
-                          <span>—</span>
-                        </span>
-                      </div>
-                      <div class="widget-summary-line">
-                        <div class="control-line">
                           <span>Расходы на энергию</span>
                         </div>
                         <span>
@@ -323,6 +309,7 @@ export const psinaWidgetTemplate = html`
                       </div>
                     </div>
                   </div>
+                  <div class="widget-margin-spacer"></div>
                 </div>
               </ppp-tab-panel>
               <ppp-tab-panel id="settings-panel"></ppp-tab-panel>
@@ -351,6 +338,9 @@ export class PsinaWidget extends Widget {
 
   @observable
   sprintTrader;
+
+  @observable
+  level1Trader;
 
   @observable
   initialBalances;
@@ -420,6 +410,12 @@ export class PsinaWidget extends Widget {
         this.columnsBySource.set(column.source, column);
       });
 
+      if (this.document.level1Trader) {
+        this.level1Trader = await ppp.getOrCreateTrader(
+          this.document.level1Trader
+        );
+      }
+
       this.initialized = true;
     } catch (e) {
       this.initialized = true;
@@ -441,12 +437,15 @@ export class PsinaWidget extends Widget {
     return super.disconnectedCallback();
   }
 
-  async validate() {}
+  async validate() {
+    // No-op.
+  }
 
   async submit() {
     return {
       $set: {
-        sprintTraderId: this.container.sprintTraderId.value
+        sprintTraderId: this.container.sprintTraderId.value,
+        level1TraderId: this.container.level1TraderId.value
       }
     };
   }
@@ -466,61 +465,111 @@ export async function widgetDefinition({ baseWidgetUrl }) {
     minWidth: 150,
     minHeight: 120,
     defaultWidth: 345,
-    settings: html` <div class="widget-settings-section">
-      <div class="widget-settings-label-group">
-        <h5>Трейдер спринта</h5>
-        <p class="description">
-          Трейдер для просмотра данных о спринте проекта.
-        </p>
+    settings: html`
+      <div class="widget-settings-section">
+        <div class="widget-settings-label-group">
+          <h5>Трейдер спринта</h5>
+          <p class="description">
+            Трейдер для просмотра данных о спринте проекта.
+          </p>
+        </div>
+        <div class="control-line flex-start">
+          <ppp-query-select
+            ${ref('sprintTraderId')}
+            standalone
+            deselectable
+            placeholder="Опционально, нажмите для выбора"
+            value="${(x) => x.document.sprintTraderId}"
+            :context="${(x) => x}"
+            :preloaded="${(x) => x.document.sprintTrader ?? ''}"
+            :displayValueFormatter="${() => (item) =>
+              html`
+                <span style="color:${getTraderSelectOptionColor(item)}">
+                  ${item?.name}
+                </span>
+              `}"
+            :query="${() => {
+              return (context) => {
+                return context.services
+                  .get('mongodb-atlas')
+                  .db('ppp')
+                  .collection('traders')
+                  .find({
+                    $and: [
+                      {
+                        caps: 'caps-psina'
+                      },
+                      {
+                        $or: [
+                          { removed: { $ne: true } },
+                          {
+                            _id: `[%#this.document.sprintTraderId ?? ''%]`
+                          }
+                        ]
+                      }
+                    ]
+                  })
+                  .sort({ updatedAt: -1 });
+              };
+            }}"
+            :transform="${() => ppp.decryptDocumentsTransformation()}"
+          ></ppp-query-select>
+          <ppp-button
+            appearance="default"
+            @click="${() => window.open('?page=trader', '_blank').focus()}"
+          >
+            +
+          </ppp-button>
+        </div>
       </div>
-      <div class="control-line flex-start">
-        <ppp-query-select
-          ${ref('sprintTraderId')}
-          standalone
-          deselectable
-          placeholder="Опционально, нажмите для выбора"
-          value="${(x) => x.document.sprintTraderId}"
-          :context="${(x) => x}"
-          :preloaded="${(x) => x.document.sprintTrader ?? ''}"
-          :displayValueFormatter="${() => (item) =>
-            html`
-              <span style="color:${getTraderSelectOptionColor(item)}">
-                ${item?.name}
-              </span>
-            `}"
-          :query="${() => {
-            return (context) => {
-              return context.services
-                .get('mongodb-atlas')
-                .db('ppp')
-                .collection('traders')
-                .find({
-                  $and: [
-                    {
-                      caps: 'caps-psina'
-                    },
-                    {
-                      $or: [
-                        { removed: { $ne: true } },
-                        {
-                          _id: `[%#this.document.sprintTraderId ?? ''%]`
-                        }
-                      ]
-                    }
-                  ]
-                })
-                .sort({ updatedAt: -1 });
-            };
-          }}"
-          :transform="${() => ppp.decryptDocumentsTransformation()}"
-        ></ppp-query-select>
-        <ppp-button
-          appearance="default"
-          @click="${() => window.open('?page=trader', '_blank').focus()}"
-        >
-          +
-        </ppp-button>
+      <div class="widget-settings-section">
+        <div class="widget-settings-label-group">
+          <h5>Трейдер L1</h5>
+          <p class="description">
+            Источник данных первого уровня для подсчёта PnL.
+          </p>
+        </div>
+        <div class="control-line flex-start">
+          <ppp-query-select
+            ${ref('level1TraderId')}
+            standalone
+            deselectable
+            placeholder="Опционально, нажмите для выбора"
+            value="${(x) => x.document.level1TraderId}"
+            :context="${(x) => x}"
+            :preloaded="${(x) => x.document.level1Trader ?? ''}"
+            :query="${() => {
+              return (context) => {
+                return context.services
+                  .get('mongodb-atlas')
+                  .db('ppp')
+                  .collection('traders')
+                  .find({
+                    $and: [
+                      {
+                        caps: `[%#(await import(ppp.rootUrl + '/lib/const.js')).TRADER_CAPS.CAPS_LEVEL1%]`
+                      },
+                      {
+                        $or: [
+                          { removed: { $ne: true } },
+                          { _id: `[%#this.document.level1TraderId ?? ''%]` }
+                        ]
+                      }
+                    ]
+                  })
+                  .sort({ updatedAt: -1 });
+              };
+            }}"
+            :transform="${() => ppp.decryptDocumentsTransformation()}"
+          ></ppp-query-select>
+          <ppp-button
+            appearance="default"
+            @click="${() => window.open('?page=trader', '_blank').focus()}"
+          >
+            +
+          </ppp-button>
+        </div>
       </div>
-    </div>`
+    `
   };
 }
