@@ -113,13 +113,13 @@ export class Level1Datum extends TraderDatum {
 
         this.#timer = setTimeout(() => {
           this.#fetchLoop();
-        }, 3000);
+        }, 5000);
       } catch (e) {
         console.error(e);
 
         this.#timer = setTimeout(() => {
           this.#fetchLoop();
-        }, 3000);
+        }, 5000);
       }
     }
   }

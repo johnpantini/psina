@@ -179,6 +179,32 @@ export class ActiveOrderDatum extends PsinaTraderGlobalDatum {
   }
 }
 
+export class SprintDatum extends PsinaTraderGlobalDatum {
+  firstReferenceAdded() {
+    if (this.trader.connection.readyState === WebSocket.OPEN) {
+      this.trader.connection.send(
+        JSON.stringify({ action: 'subscribe', sprint: true })
+      );
+    }
+  }
+
+  async lastReferenceRemoved(source, symbol) {
+    if (this.trader.connection.readyState === WebSocket.OPEN) {
+      this.trader.connection.send(
+        JSON.stringify({ action: 'unsubscribe', sprint: true })
+      );
+    }
+  }
+
+  valueKeyForData(data) {
+    return data.cat;
+  }
+
+  [TRADER_DATUM.SPRINT](data) {
+    return data;
+  }
+}
+
 class PsinaTrader extends Trader {
   #pendingConnection;
 
@@ -203,6 +229,10 @@ class PsinaTrader extends Trader {
       {
         type: ActiveOrderDatum,
         datums: [TRADER_DATUM.ACTIVE_ORDER]
+      },
+      {
+        type: SprintDatum,
+        datums: [TRADER_DATUM.SPRINT]
       },
       {
         type: TraderEventDatum,
@@ -276,6 +306,8 @@ class PsinaTrader extends Trader {
                 resolve(this.connection);
 
                 break;
+              } else if (payload.T === 's') {
+                this.datums[TRADER_DATUM.SPRINT].dataArrived(payload);
               } else if (payload.T === 'b') {
                 for (const currency in payload.b) {
                   this.datums[TRADER_DATUM.POSITION].dataArrived({
@@ -288,7 +320,9 @@ class PsinaTrader extends Trader {
               } else if (payload.T === 'p') {
                 payload.isBalance = false;
 
-                this.datums[TRADER_DATUM.POSITION].dataArrived(payload);
+                this.datums[TRADER_DATUM.POSITION].dataArrived(payload, {
+                  doNotSaveValue: payload.oid === '@CLEAR'
+                });
               } else if (payload.T === 'o') {
                 this.datums[TRADER_DATUM.ACTIVE_ORDER].dataArrived(payload);
               } else if (payload.T === 't') {
