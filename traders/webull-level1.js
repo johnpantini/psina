@@ -54,6 +54,8 @@ export async function traderPageDefinition() {
             this.urlRadio.disabled = true;
             this.sharedWorkerRadio.disabled = true;
 
+            this.runtime.value = 'main-thread';
+
             observer.disconnect();
           }
         });
@@ -103,6 +105,8 @@ export async function traderPageDefinition() {
       }
 
       async submit(sup) {
+        sup.$set.runtime = 'main-thread';
+
         sup.$set = {
           ...sup.$set,
           url: new URL(this.url.value).toString(),

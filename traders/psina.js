@@ -90,6 +90,10 @@ export async function traderPageDefinition() {
           if (this.urlRadio) {
             this.urlRadio.disabled = true;
 
+            if (this.runtime.value === 'url') {
+              this.runtime.value = 'main-thread';
+            }
+
             observer.disconnect();
           }
         });
