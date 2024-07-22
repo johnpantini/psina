@@ -10,6 +10,10 @@ const [
   import(`${ppp.rootUrl}/elements/pages/service-ppp-aspirant-worker.js`)
 ]);
 
+const isValidNumberValue = (n) => {
+  return !!n && !isNaN(parseFloat(n));
+};
+
 export class Level1Datum extends TraderDatum {
   #timer;
 
@@ -188,8 +192,44 @@ export class Level1Datum extends TraderDatum {
         TRADER_DATUM.STATUS
       ].includes(datum)
     ) {
-      return [EXCHANGE.US, EXCHANGE.UTEX_MARGIN_STOCKS].includes(
-        source?.instrument?.exchange
+      let predicate = false;
+
+      switch (datum) {
+        case TRADER_DATUM.LAST_PRICE:
+          predicate = isValidNumberValue(data.close);
+
+          break;
+        case TRADER_DATUM.LAST_PRICE_ABSOLUTE_CHANGE:
+          predicate = isValidNumberValue(data.change);
+
+          break;
+        case TRADER_DATUM.LAST_PRICE_RELATIVE_CHANGE:
+          predicate = isValidNumberValue(data.changeRatio);
+
+          break;
+        case TRADER_DATUM.EXTENDED_LAST_PRICE:
+          predicate = isValidNumberValue(data.pPrice);
+
+          break;
+        case TRADER_DATUM.EXTENDED_LAST_PRICE_ABSOLUTE_CHANGE:
+          predicate = isValidNumberValue(data.pChange);
+
+          break;
+        case TRADER_DATUM.EXTENDED_LAST_PRICE_RELATIVE_CHANGE:
+          predicate = isValidNumberValue(data.pChRatio);
+
+          break;
+        case TRADER_DATUM.DAY_VOLUME:
+          predicate = isValidNumberValue(data.volume);
+
+          break;
+      }
+
+      return (
+        predicate &&
+        [EXCHANGE.US, EXCHANGE.UTEX_MARGIN_STOCKS].includes(
+          source?.instrument?.exchange
+        )
       );
     } else {
       return [EXCHANGE.SPBX, EXCHANGE.US, EXCHANGE.UTEX_MARGIN_STOCKS].includes(
