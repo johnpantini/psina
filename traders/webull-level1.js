@@ -2,7 +2,8 @@ const [{ css, html, ref }, { TRADERS, TRADER_CAPS }, { validate }] =
   await Promise.all([
     import(`${ppp.rootUrl}/vendor/fast-element.min.js`),
     import(`${ppp.rootUrl}/lib/const.js`),
-    import(`${ppp.rootUrl}/lib/ppp-errors.js`)
+    import(`${ppp.rootUrl}/lib/ppp-errors.js`),
+    import(`${ppp.rootUrl}/elements/pages/service-ppp-aspirant-worker.js`)
   ]);
 
 import WebullLevel1Trader from './webull-level1-trader.js';
@@ -46,6 +47,53 @@ export async function traderPageDefinition() {
           </ppp-button>
         </div>
       </section>
+      <section>
+        <div class="label-group">
+          <h5>Соединитель</h5>
+          <p class="description">
+            Наличие соединителя ускоряет обновление данных.
+          </p>
+        </div>
+        <div class="input-group">
+          <div class="control-stack">
+            <ppp-query-select
+              ${ref('connectorServiceId')}
+              standalone
+              deselectable
+              placeholder="Опционально, нажмите для выбора"
+              :context="${(x) => x}"
+              value="${(x) => x.document.connectorServiceId}"
+              :preloaded="${(x) => x.document.connectorService ?? ''}"
+              :query="${() => {
+                return (context) => {
+                  return context.services
+                    .get('mongodb-atlas')
+                    .db('ppp')
+                    .collection('services')
+                    .find({
+                      $and: [
+                        {
+                          type: `[%#(await import(ppp.rootUrl + '/lib/const.js')).SERVICES.PPP_ASPIRANT_WORKER%]`
+                        },
+                        { workerPredefinedTemplate: 'connectors' },
+                        {
+                          $or: [
+                            { removed: { $ne: true } },
+                            {
+                              _id: `[%#this.document.connectorServiceId ?? ''%]`
+                            }
+                          ]
+                        }
+                      ]
+                    })
+                    .sort({ updatedAt: -1 });
+                };
+              }}"
+              :transform="${() => ppp.decryptDocumentsTransformation()}"
+            ></ppp-query-select>
+          </div>
+        </div>
+      </section>
     `,
     pageClass: class {
       async loadedCallback() {
@@ -78,17 +126,27 @@ export async function traderPageDefinition() {
                   _id: new BSON.ObjectId('[%#payload.documentId%]'),
                   type: `[%#(await import(ppp.rootUrl + '/lib/const.js')).TRADERS.CUSTOM%]`
                 }
+              },
+              {
+                $lookup: {
+                  from: 'services',
+                  localField: 'connectorServiceId',
+                  foreignField: '_id',
+                  as: 'connectorService'
+                }
+              },
+              {
+                $unwind: {
+                  path: '$connectorService',
+                  preserveNullAndEmptyArrays: true
+                }
               }
             ]);
         };
       }
 
       getCaps() {
-        return [
-          TRADER_CAPS.CAPS_LEVEL1,
-          TRADER_CAPS.CAPS_EXTENDED_LEVEL1,
-          TRADER_CAPS.CAPS_US_NBBO
-        ];
+        return [TRADER_CAPS.CAPS_LEVEL1, TRADER_CAPS.CAPS_EXTENDED_LEVEL1];
       }
 
       async find() {
@@ -111,6 +169,7 @@ export async function traderPageDefinition() {
           ...sup.$set,
           url: new URL(this.url.value).toString(),
           deviceID: this.deviceID.value.trim(),
+          connectorServiceId: this.connectorServiceId.value,
           version: 1,
           type: TRADERS.CUSTOM
         };

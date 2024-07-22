@@ -1,11 +1,13 @@
 const [
   { pppTraderInstanceForWorkerIs, Trader, TraderDatum },
   { TRADER_DATUM, BROKERS, EXCHANGE, INSTRUMENT_DICTIONARY },
-  { comboStatusToTradingStatus }
+  { comboStatusToTradingStatus },
+  { getAspirantWorkerBaseUrl }
 ] = await Promise.all([
   import(`${ppp.rootUrl}/lib/traders/trader-worker.js`),
   import(`${ppp.rootUrl}/lib/const.js`),
-  import(`${ppp.rootUrl}/lib/traders/alpaca-v2-plus.js`)
+  import(`${ppp.rootUrl}/lib/traders/alpaca-v2-plus.js`),
+  import(`${ppp.rootUrl}/elements/pages/service-ppp-aspirant-worker.js`)
 ]);
 
 export class Level1Datum extends TraderDatum {
@@ -60,12 +62,32 @@ export class Level1Datum extends TraderDatum {
             const value = this.trader.internalDictionary?.[symbol];
 
             if (!value) {
-              const webullSearchResponse = await ppp.fetch(
-                `https://quotes-gw.webullfintech.com/api/search/pc/tickers?keyword=${symbol}&pageIndex=1&pageSize=20`,
-                {
-                  headers: this.trader.webullHeaders()
-                }
-              );
+              let webullSearchResponse;
+
+              if (this.trader.document.connectorServiceId) {
+                const connectorUrl = await getAspirantWorkerBaseUrl(
+                  this.trader.document.connectorService
+                );
+
+                webullSearchResponse = await fetch(`${connectorUrl}fetch`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    method: 'GET',
+                    url: `https://quotes-gw.webullfintech.com/api/search/pc/tickers?keyword=${symbol}&pageIndex=1&pageSize=20`,
+                    headers: this.trader.webullHeaders()
+                  })
+                });
+              } else {
+                webullSearchResponse = await ppp.fetch(
+                  `https://quotes-gw.webullfintech.com/api/search/pc/tickers?keyword=${symbol}&pageIndex=1&pageSize=20`,
+                  {
+                    headers: this.trader.webullHeaders()
+                  }
+                );
+              }
 
               if (!webullSearchResponse.ok) {
                 continue;
@@ -91,14 +113,36 @@ export class Level1Datum extends TraderDatum {
             }
           }
 
-          const quotesResponse = await ppp.fetch(
-            `https://quotes-gw.webullfintech.com/api/bgw/quote/realtime?ids=${symbols
-              .map((s) => this.trader.internalDictionary[s])
-              .join(',')}&includeSecu=1&delay=0&more=1`,
-            {
-              headers: this.trader.webullHeaders()
-            }
-          );
+          let quotesResponse;
+
+          if (this.trader.document.connectorServiceId) {
+            const connectorUrl = await getAspirantWorkerBaseUrl(
+              this.trader.document.connectorService
+            );
+
+            quotesResponse = await fetch(`${connectorUrl}fetch`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                method: 'GET',
+                url: `https://quotes-gw.webullfintech.com/api/bgw/quote/realtime?ids=${symbols
+                  .map((s) => this.trader.internalDictionary[s])
+                  .join(',')}&includeSecu=1&delay=0&more=1`,
+                headers: this.trader.webullHeaders()
+              })
+            });
+          } else {
+            quotesResponse = await ppp.fetch(
+              `https://quotes-gw.webullfintech.com/api/bgw/quote/realtime?ids=${symbols
+                .map((s) => this.trader.internalDictionary[s])
+                .join(',')}&includeSecu=1&delay=0&more=1`,
+              {
+                headers: this.trader.webullHeaders()
+              }
+            );
+          }
 
           if (quotesResponse.ok) {
             const data = await quotesResponse.json();
@@ -111,15 +155,21 @@ export class Level1Datum extends TraderDatum {
           }
         }
 
-        this.#timer = setTimeout(() => {
-          this.#fetchLoop();
-        }, 5000);
+        this.#timer = setTimeout(
+          () => {
+            this.#fetchLoop();
+          },
+          this.trader.document.connectorServiceId ? 1000 : 5000
+        );
       } catch (e) {
         console.error(e);
 
-        this.#timer = setTimeout(() => {
-          this.#fetchLoop();
-        }, 5000);
+        this.#timer = setTimeout(
+          () => {
+            this.#fetchLoop();
+          },
+          this.trader.document.connectorServiceId ? 1000 : 5000
+        );
       }
     }
   }

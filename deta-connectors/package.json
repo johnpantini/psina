@@ -1,0 +1,16 @@
+{
+  "name": "psina-gw",
+  "version": "1.0.0",
+  "description": "psina-gw",
+  "author": "johnpantini",
+  "main": "psina-gw.js",
+  "dependencies": {
+    "axios": "latest",
+    "express": "latest",
+    "cors": "latest"
+  },
+  "scripts": {
+    "start": "node psina-gw.js"
+  },
+  "license": "MIT"
+}
