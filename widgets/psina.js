@@ -10,8 +10,15 @@ const [
   },
   { WidgetColumns },
   { css, html, ref, when, observable, repeat },
-  { formatDate, formatNumber, formatAmount, formatPercentage },
+  {
+    formatDate,
+    formatNumber,
+    formatAmount,
+    formatPercentage,
+    formatAbsoluteChange
+  },
   { WIDGET_TYPES, TRADER_DATUM, COLUMN_SOURCE },
+  { uuidv4 },
   { normalize, typography, getTraderSelectOptionColor }
 ] = await Promise.all([
   import(`${ppp.rootUrl}/elements/widget.js`),
@@ -19,6 +26,7 @@ const [
   import(`${ppp.rootUrl}/vendor/fast-element.min.js`),
   import(`${ppp.rootUrl}/lib/intl.js`),
   import(`${ppp.rootUrl}/lib/const.js`),
+  import(`${ppp.rootUrl}/lib/ppp-crypto.js`),
   import(`${ppp.rootUrl}/design/styles.js`),
   import(`${ppp.rootUrl}/elements/banner.js`),
   import(`${ppp.rootUrl}/elements/button.js`),
@@ -280,6 +288,67 @@ export const psinaWidgetTemplate = html`
                   </div>
                   <div class="widget-margin-spacer"></div>
                   <div class="widget-section">
+                    <div class="widget-section-h1">
+                      <span>Мой PnL</span>
+                    </div>
+                  </div>
+                  <div class="widget-section">
+                    <div class="widget-summary">
+                      ${repeat(
+                        (x) => x.pnl,
+                        html`
+                          <div class="widget-summary-line">
+                            <div class="control-line balance-line">
+                              <span
+                                :trader="${(x, c) => c.parent.sprintTrader}"
+                                :payload="${(x) => {
+                                  return {
+                                    symbol: x[0]
+                                  };
+                                }}"
+                                :column="${(x, c) =>
+                                  c.parent.columnsBySource.get(
+                                    COLUMN_SOURCE.INSTRUMENT
+                                  )}"
+                              >
+                                ${(x, c) =>
+                                  c.parent.columns.columnElement(
+                                    c.parent.columnsBySource.get(
+                                      COLUMN_SOURCE.INSTRUMENT
+                                    ),
+                                    x[0]
+                                  )}
+                              </span>
+                            </div>
+                            <span>
+                              <span
+                                class="${(x) =>
+                                  x[1] > 0
+                                    ? 'positive'
+                                    : x[1] < 0
+                                    ? 'negative'
+                                    : ''}"
+                              >
+                                ${(x) =>
+                                  formatAbsoluteChange(
+                                    x[1],
+                                    {
+                                      symbol: x[0],
+                                      currency: x[0]
+                                    },
+                                    {
+                                      maximumFractionDigits: 2
+                                    }
+                                  )}
+                              </span>
+                            </span>
+                          </div>
+                        `
+                      )}
+                    </div>
+                  </div>
+                  <div class="widget-margin-spacer"></div>
+                  <div class="widget-section">
                     <div class="widget-subsection">
                       <ppp-widget-trifecta-field
                         ?disabled="${(x) => x.sprint.s !== 'closed'}"
@@ -332,6 +401,48 @@ export const psinaWidgetStyles = css`
   }
 `;
 
+export class IndividualSymbolSource {
+  /**
+   * @type {PsinaWidget}
+   */
+  parent;
+
+  sourceID = uuidv4();
+
+  currency;
+
+  symbol;
+
+  instrument;
+
+  constructor(parent, currency, symbol, instrument) {
+    this.parent = parent;
+    this.instrument = instrument;
+    this.currency = currency;
+    this.symbol = symbol;
+  }
+
+  @observable
+  lastPrice;
+
+  lastPriceChanged(oldValue, newValue) {
+    this.parent.referencePrices.get(this.currency).get(this.symbol).price =
+      newValue;
+
+    return this.parent.recalcPersonalPnL();
+  }
+
+  @observable
+  extendedLastPrice;
+
+  extendedLastPriceChanged(oldValue, newValue) {
+    this.parent.referencePrices.get(this.currency).get(this.symbol).price =
+      newValue;
+
+    return this.parent.recalcPersonalPnL();
+  }
+}
+
 export class PsinaWidget extends Widget {
   @observable
   initialized;
@@ -348,6 +459,9 @@ export class PsinaWidget extends Widget {
   @observable
   finalBalances;
 
+  @observable
+  pnl;
+
   /**
    * @type {WidgetColumns}
    */
@@ -356,6 +470,10 @@ export class PsinaWidget extends Widget {
 
   columnsBySource = new Map();
 
+  referencePrices = new Map();
+
+  sprintApplication;
+
   @observable
   sprint;
 
@@ -363,13 +481,56 @@ export class PsinaWidget extends Widget {
     if (this.sprint) {
       this.initialBalances = this.sprint.ib;
       this.finalBalances = this.sprint.fb;
+
+      this.recalcPersonalPnL();
     }
+  }
+
+  positions = new Map();
+
+  balances = new Map();
+
+  @observable
+  position;
+
+  positionChanged(oldValue, newValue) {
+    if (newValue?.oid === '@CLEAR') {
+      this.positions.clear();
+
+      return this.recalcPersonalPnL();
+    }
+
+    if (!newValue.isBalance) {
+      const currency = newValue.instrument?.currency;
+
+      if (!currency) {
+        return;
+      }
+
+      if (!this.positions.has(currency)) {
+        this.positions.set(currency, new Map());
+      }
+
+      const innerMap = this.positions.get(currency);
+
+      if (newValue.size === 0) {
+        innerMap.delete(newValue.symbol);
+      } else {
+        innerMap.set(newValue.symbol, newValue.size);
+      }
+    } else {
+      this.balances.set(newValue.symbol, newValue.size);
+    }
+
+    return this.recalcPersonalPnL();
   }
 
   constructor() {
     super();
 
     this.initialBalances = [];
+    this.finalBalances = [];
+    this.pnl = [];
   }
 
   async connectedCallback() {
@@ -384,6 +545,15 @@ export class PsinaWidget extends Widget {
       });
     }
 
+    const port = new URL(this.document.sprintTrader.wsUrl).port;
+
+    if (port.endsWith('006')) {
+      this.sprintApplication = 'SPRINT_PAPER_TRADE';
+
+      this.initialBalances.push(['USD', 0]);
+      this.pnl.push(['USD', 0]);
+    }
+
     try {
       this.sprintTrader = await ppp.getOrCreateTrader(
         this.document.sprintTrader
@@ -392,7 +562,8 @@ export class PsinaWidget extends Widget {
       await this.sprintTrader.subscribeFields?.({
         source: this,
         fieldDatumPairs: {
-          sprint: TRADER_DATUM.SPRINT
+          sprint: TRADER_DATUM.SPRINT,
+          position: TRADER_DATUM.POSITION
         }
       });
 
@@ -416,6 +587,8 @@ export class PsinaWidget extends Widget {
         );
       }
 
+      this.recalcPersonalPnL();
+
       this.initialized = true;
     } catch (e) {
       this.initialized = true;
@@ -429,12 +602,116 @@ export class PsinaWidget extends Widget {
       await this.sprintTrader.unsubscribeFields?.({
         source: this,
         fieldDatumPairs: {
-          sprint: TRADER_DATUM.SPRINT
+          sprint: TRADER_DATUM.SPRINT,
+          position: TRADER_DATUM.POSITION
         }
       });
     }
 
+    for (const [, innerMap] of this.referencePrices) {
+      for (const [, refData] of innerMap) {
+        if (this.level1Trader) {
+          await this.level1Trader.unsubscribeFields({
+            source: refData.source,
+            fieldDatumPairs: {
+              lastPrice: TRADER_DATUM.LAST_PRICE,
+              extendedLastPrice: TRADER_DATUM.EXTENDED_LAST_PRICE
+            }
+          });
+        }
+      }
+    }
+
     return super.disconnectedCallback();
+  }
+
+  recalcPersonalPnL() {
+    if (!this.level1Trader || !this.sprint) {
+      return;
+    }
+
+    this.pnl = [];
+
+    const initialBalances = new Map(this.sprint.ib ?? []);
+
+    for (const [currency, initialBalanceValue] of initialBalances) {
+      let balanceCorrection = 0;
+
+      if (this.balances.has(currency)) {
+        const positions = this.positions.get(currency);
+
+        if (positions) {
+          for (const [symbol, size] of positions) {
+            const instrument = this.level1Trader.instruments.get(symbol);
+
+            if (instrument) {
+              const referencePrice = this.referencePrices
+                .get(currency)
+                ?.get(symbol)?.price;
+
+              if (!referencePrice) {
+                // Do it the async way.
+                void this.#referencePriceNeeded(currency, symbol, instrument);
+
+                continue;
+              }
+
+              const positionAmount = size * referencePrice;
+
+              balanceCorrection += positionAmount;
+
+              // Fees.
+              if (this.sprintApplication == 'SPRINT_PAPER_TRADE') {
+                balanceCorrection -= size * 0.00331;
+              }
+            }
+          }
+        }
+      }
+
+      const diff =
+        this.balances.get(currency) - initialBalanceValue + balanceCorrection;
+
+      this.pnl.push([currency, (diff * this.sprint.fr) / 100]);
+    }
+
+    if (!this.pnl.length) {
+      if (this.sprintApplication === 'SPRINT_PAPER_TRADE') {
+        this.pnl.push(['USD', 0]);
+      }
+    }
+  }
+
+  async #referencePriceNeeded(currency, symbol, instrument) {
+    if (typeof this.referencePrices.get(currency) === 'undefined') {
+      this.referencePrices.set(currency, new Map());
+    }
+
+    const innerMap = this.referencePrices.get(currency);
+
+    if (typeof innerMap.get(symbol) === 'undefined') {
+      const individualSource = new IndividualSymbolSource(
+        this,
+        currency,
+        symbol,
+        instrument
+      );
+
+      innerMap.set(symbol, {
+        price: 0,
+        source: individualSource
+      });
+
+      if (this.level1Trader) {
+        await this.level1Trader.subscribeFields({
+          source: individualSource,
+          fieldDatumPairs: {
+            lastPrice: TRADER_DATUM.LAST_PRICE,
+            extendedLastPrice: TRADER_DATUM.EXTENDED_LAST_PRICE
+          }
+        });
+      }
+    }
   }
 
   async validate() {
