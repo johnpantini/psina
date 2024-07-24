@@ -10,6 +10,23 @@ const [
   import(`${ppp.rootUrl}/elements/pages/service-ppp-aspirant-worker.js`)
 ]);
 
+window.addEventListener('message', (e) => {
+  console.log(e);
+});
+
+let isCORSEnabled = false;
+
+try {
+  await fetch(
+    'https://quotes-gw.webullfintech.com/api/stock/tickerRealTime/getQuote?tickerId=1',
+    {
+      mode: 'cors'
+    }
+  );
+} catch (e) {
+  isCORSEnabled = true;
+}
+
 const isValidNumberValue = (n) => {
   return !!n && !isNaN(parseFloat(n));
 };
@@ -85,7 +102,9 @@ export class Level1Datum extends TraderDatum {
                   })
                 });
               } else {
-                webullSearchResponse = await ppp.fetch(
+                webullSearchResponse = await (isCORSEnabled
+                  ? ppp.fetch
+                  : fetch)(
                   `https://quotes-gw.webullfintech.com/api/search/pc/tickers?keyword=${symbol}&pageIndex=1&pageSize=20`,
                   {
                     headers: this.trader.webullHeaders()
@@ -138,7 +157,7 @@ export class Level1Datum extends TraderDatum {
               })
             });
           } else {
-            quotesResponse = await ppp.fetch(
+            quotesResponse = await (isCORSEnabled ? ppp.fetch : fetch)(
               `https://quotes-gw.webullfintech.com/api/bgw/quote/realtime?ids=${symbols
                 .map((s) => this.trader.internalDictionary[s])
                 .join(',')}&includeSecu=1&delay=0&more=1`,
@@ -163,7 +182,9 @@ export class Level1Datum extends TraderDatum {
           () => {
             this.#fetchLoop();
           },
-          this.trader.document.connectorServiceId ? 1000 : 5000
+          this.trader.document.connectorServiceId || !isCORSEnabled
+            ? 1000
+            : 5000
         );
       } catch (e) {
         console.error(e);
@@ -172,7 +193,9 @@ export class Level1Datum extends TraderDatum {
           () => {
             this.#fetchLoop();
           },
-          this.trader.document.connectorServiceId ? 1000 : 5000
+          this.trader.document.connectorServiceId || !isCORSEnabled
+            ? 1000
+            : 5000
         );
       }
     }

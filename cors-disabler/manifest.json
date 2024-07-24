@@ -1,0 +1,11 @@
+{
+  "name": "Psina CORS disabler",
+  "description": "Disables the CORS mechanism for well-known endpoints.",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["declarativeNetRequest"],
+  "host_permissions": ["<all_urls>"]
+}
