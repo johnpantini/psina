@@ -102,14 +102,21 @@ export class Level1Datum extends TraderDatum {
                   })
                 });
               } else {
-                webullSearchResponse = await (isCORSEnabled
-                  ? ppp.fetch
-                  : fetch)(
-                  `https://quotes-gw.webullfintech.com/api/search/pc/tickers?keyword=${symbol}&pageIndex=1&pageSize=20`,
-                  {
-                    headers: this.trader.webullHeaders()
-                  }
-                );
+                if (isCORSEnabled) {
+                  webullSearchResponse = await ppp.fetch(
+                    `https://quotes-gw.webullfintech.com/api/search/pc/tickers?keyword=${symbol}&pageIndex=1&pageSize=20`,
+                    {
+                      headers: this.trader.webullHeaders()
+                    }
+                  );
+                } else {
+                  webullSearchResponse = await fetch(
+                    `https://quotes-gw.webullfintech.com/api/search/pc/tickers?keyword=${symbol}&pageIndex=1&pageSize=20`,
+                    {
+                      headers: this.trader.webullHeaders()
+                    }
+                  );
+                }
               }
 
               if (!webullSearchResponse.ok) {
@@ -157,14 +164,25 @@ export class Level1Datum extends TraderDatum {
               })
             });
           } else {
-            quotesResponse = await (isCORSEnabled ? ppp.fetch : fetch)(
-              `https://quotes-gw.webullfintech.com/api/bgw/quote/realtime?ids=${symbols
-                .map((s) => this.trader.internalDictionary[s])
-                .join(',')}&includeSecu=1&delay=0&more=1`,
-              {
-                headers: this.trader.webullHeaders()
-              }
-            );
+            if (isCORSEnabled) {
+              quotesResponse = await ppp.fetch(
+                `https://quotes-gw.webullfintech.com/api/bgw/quote/realtime?ids=${symbols
+                  .map((s) => this.trader.internalDictionary[s])
+                  .join(',')}&includeSecu=1&delay=0&more=1`,
+                {
+                  headers: this.trader.webullHeaders()
+                }
+              );
+            } else {
+              quotesResponse = await fetch(
+                `https://quotes-gw.webullfintech.com/api/bgw/quote/realtime?ids=${symbols
+                  .map((s) => this.trader.internalDictionary[s])
+                  .join(',')}&includeSecu=1&delay=0&more=1`,
+                {
+                  headers: this.trader.webullHeaders()
+                }
+              );
+            }
           }
 
           if (quotesResponse.ok) {
