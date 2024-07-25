@@ -18,6 +18,7 @@ const [
     formatAbsoluteChange
   },
   { WIDGET_TYPES, TRADER_DATUM, COLUMN_SOURCE },
+  { later },
   { uuidv4 },
   { normalize, typography, getTraderSelectOptionColor }
 ] = await Promise.all([
@@ -26,6 +27,7 @@ const [
   import(`${ppp.rootUrl}/vendor/fast-element.min.js`),
   import(`${ppp.rootUrl}/lib/intl.js`),
   import(`${ppp.rootUrl}/lib/const.js`),
+  import(`${ppp.rootUrl}/lib/ppp-decorators.js`),
   import(`${ppp.rootUrl}/lib/ppp-crypto.js`),
   import(`${ppp.rootUrl}/design/styles.js`),
   import(`${ppp.rootUrl}/elements/banner.js`),
@@ -102,7 +104,8 @@ export const psinaWidgetTemplate = html`
           html`
             <ppp-widget-tabs>
               <ppp-widget-tab id="srpint">Спринт</ppp-widget-tab>
-              <ppp-widget-tab id="settings" disabled>Настройки</ppp-widget-tab>
+              <ppp-widget-tab id="settings">Настройки</ppp-widget-tab>
+              <ppp-widget-tab id="history" disabled>История</ppp-widget-tab>
               <ppp-tab-panel id="sprint-panel">
                 <div class="widget-body-inner">
                   <div class="widget-margin-spacer"></div>
@@ -381,7 +384,136 @@ export const psinaWidgetTemplate = html`
                   <div class="widget-margin-spacer"></div>
                 </div>
               </ppp-tab-panel>
-              <ppp-tab-panel id="settings-panel"></ppp-tab-panel>
+              <ppp-tab-panel id="settings-panel">
+                <div class="widget-body-inner">
+                  <div class="widget-margin-spacer"></div>
+                  <div class="widget-section">
+                    <div class="widget-section-h1">
+                      <span>Параметры выплат</span>
+                    </div>
+                  </div>
+                  <div class="widget-section">
+                    <div class="widget-text-label">
+                      Автовыводимая прибыль, %
+                    </div>
+                    <ppp-widget-text-field
+                      autocomplete="off"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      lotsize="1"
+                      placeholder="0"
+                      value=${(x) => x.sprint?.pa || ''}
+                      ${ref('payout')}
+                    >
+                    </ppp-widget-text-field>
+                  </div>
+                  <div class="widget-margin-spacer"></div>
+                  <div class="widget-section">
+                    <div class="widget-subsection">
+                      <div class="widget-button-line">
+                        <ppp-widget-button
+                          appearance="primary"
+                          @click="${(x) => x.setPayout(x.payout.value)}"
+                          ${ref('payoutButton')}
+                        >
+                          Сохранить
+                        </ppp-widget-button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="widget-margin-spacer"></div>
+                  <div class="widget-margin-spacer"></div>
+                  <div class="widget-section">
+                    <div class="widget-section-h1">
+                      <span>Счета криптобирж</span>
+                    </div>
+                  </div>
+                  <div class="widget-section">
+                    <div class="widget-text-label">Binance</div>
+                    <ppp-widget-text-field
+                      type="number"
+                      autocomplete="off"
+                      placeholder="Нет"
+                      value=${(x) => x.sprint?.cr?.bn || ''}
+                      ${ref('binance')}
+                    >
+                    </ppp-widget-text-field>
+                  </div>
+                  <div class="widget-margin-spacer"></div>
+                  <div class="widget-section">
+                    <div class="widget-text-label">Bybit</div>
+                    <ppp-widget-text-field
+                      type="number"
+                      autocomplete="off"
+                      placeholder="Нет"
+                      value=${(x) => x.sprint?.cr?.by || ''}
+                      ${ref('bybit')}
+                    >
+                    </ppp-widget-text-field>
+                  </div>
+                  <div class="widget-margin-spacer"></div>
+                  <div class="widget-section">
+                    <div class="widget-text-label">OKX</div>
+                    <ppp-widget-text-field
+                      type="number"
+                      autocomplete="off"
+                      placeholder="Нет"
+                      value=${(x) => x.sprint?.cr?.okx || ''}
+                      ${ref('okx')}
+                    >
+                    </ppp-widget-text-field>
+                  </div>
+                  <div class="widget-margin-spacer"></div>
+                  <div class="widget-section">
+                    <div class="widget-text-label">KuCoin</div>
+                    <ppp-widget-text-field
+                      type="number"
+                      autocomplete="off"
+                      placeholder="Нет"
+                      value=${(x) => x.sprint?.cr?.ku || ''}
+                      ${ref('kucoin')}
+                    >
+                    </ppp-widget-text-field>
+                  </div>
+                  <div class="widget-margin-spacer"></div>
+                  <div class="widget-section">
+                    <div class="widget-text-label">MEXC</div>
+                    <ppp-widget-text-field
+                      type="number"
+                      autocomplete="off"
+                      placeholder="Нет"
+                      value=${(x) => x.sprint?.cr?.mxc || ''}
+                      ${ref('mexc')}
+                    >
+                    </ppp-widget-text-field>
+                  </div>
+                  <div class="widget-margin-spacer"></div>
+                  <div class="widget-section">
+                    <div class="widget-subsection">
+                      <div class="widget-button-line">
+                        <ppp-widget-button
+                          appearance="primary"
+                          @click="${(x) =>
+                            x.setCEXForWithdrawal({
+                              binance: x.binance.value,
+                              bybit: x.bybit.value,
+                              okx: x.okx.value,
+                              kucoin: x.kucoin.value,
+                              mexc: x.mexc.value
+                            })}"
+                          ${ref('cexButton')}
+                        >
+                          Сохранить
+                        </ppp-widget-button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="widget-margin-spacer"></div>
+                </div>
+              </ppp-tab-panel>
+              <ppp-tab-panel id="history-panel"> </ppp-tab-panel>
             </ppp-widget-tabs>
           `
         )}
@@ -623,6 +755,67 @@ export class PsinaWidget extends Widget {
     }
 
     return super.disconnectedCallback();
+  }
+
+  async setPayout(value) {
+    this.payoutButton.setAttribute('disabled', '');
+
+    try {
+      const payout = Math.abs(Math.trunc(value));
+
+      if (payout >= 0 && payout <= 100) {
+        this.payout.value = payout || '';
+
+        await later(500);
+        await this.sprintTrader.call({
+          method: 'setPayout',
+          payout
+        });
+
+        return this.notificationsArea.success({
+          title: 'Запрос отправлен'
+        });
+      } else {
+        this.payout.value = '';
+
+        this.payout.focus();
+        this.notificationsArea.error({
+          text: 'Значение должно быть в диапазоне от 0 до 100.'
+        });
+      }
+    } catch (e) {
+      return this.catchException(e);
+    } finally {
+      this.payoutButton.removeAttribute('disabled');
+    }
+  }
+
+  async setCEXForWithdrawal(values) {
+    this.cexButton.setAttribute('disabled', '');
+
+    try {
+      for (const cex in values) {
+        values[cex] = (values[cex] ?? '').replaceAll(/\D/g, '');
+
+        if (+values[cex] === 0) {
+          values[cex] = '';
+        }
+      }
+
+      await later(500);
+      await this.sprintTrader.call({
+        method: 'setCEXForWithdrawal',
+        values
+      });
+
+      return this.notificationsArea.success({
+        title: 'Запрос отправлен'
+      });
+    } catch (e) {
+      return this.catchException(e);
+    } finally {
+      this.cexButton.removeAttribute('disabled');
+    }
   }
 
   recalcPersonalPnL() {

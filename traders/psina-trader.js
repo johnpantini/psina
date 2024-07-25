@@ -1,11 +1,13 @@
 const [
   { pppTraderInstanceForWorkerIs, Trader, GlobalTraderDatum, TraderEventDatum },
   { TRADER_DATUM, BROKERS, EXCHANGE, INSTRUMENT_DICTIONARY },
+  { uuidv4 },
   { later },
   { AuthorizationError, ConnectionLimitExceededError }
 ] = await Promise.all([
   import(`${ppp.rootUrl}/lib/traders/trader-worker.js`),
   import(`${ppp.rootUrl}/lib/const.js`),
+  import(`${ppp.rootUrl}/lib/ppp-crypto.js`),
   import(`${ppp.rootUrl}/lib/ppp-decorators.js`),
   import(`${ppp.rootUrl}/lib/ppp-exceptions.js`)
 ]);
@@ -375,6 +377,40 @@ class PsinaTrader extends Trader {
 
   getBroker() {
     return BROKERS.PSINA;
+  }
+
+  async setPayout(payout) {
+    await this.establishWebSocketConnection();
+
+    return this.connection.send(
+      JSON.stringify({
+        action: 'fetch',
+        rid: uuidv4(),
+        method: 'setPayout',
+        payout
+      })
+    );
+  }
+
+  async setCEXForWithdrawal(values) {
+    await this.establishWebSocketConnection();
+
+    return this.connection.send(
+      JSON.stringify({
+        action: 'fetch',
+        rid: uuidv4(),
+        method: 'setCEXForWithdrawal',
+        values
+      })
+    );
+  }
+
+  async call(data) {
+    if (data.method === 'setPayout') {
+      return this.setPayout(data.payout);
+    } else if (data.method === 'setCEXForWithdrawal') {
+      return this.setCEXForWithdrawal(data.values);
+    }
   }
 }
 
