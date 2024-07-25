@@ -264,6 +264,10 @@ export class Level1Datum extends TraderDatum {
           predicate = isValidNumberValue(data.volume);
 
           break;
+
+        case TRADER_DATUM.TRADING_STATUS:
+        case TRADER_DATUM.STATUS:
+          predicate = true;
       }
 
       return (
