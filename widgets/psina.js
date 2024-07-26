@@ -418,7 +418,7 @@ export const psinaWidgetTemplate = html`
                           @click="${(x) => x.setPayout(x.payout.value)}"
                           ${ref('payoutButton')}
                         >
-                          Сохранить
+                          Сохранить параметры выплат
                         </ppp-widget-button>
                       </div>
                     </div>
@@ -505,7 +505,7 @@ export const psinaWidgetTemplate = html`
                             })}"
                           ${ref('cexButton')}
                         >
-                          Сохранить
+                          Сохранить счета
                         </ppp-widget-button>
                       </div>
                     </div>
