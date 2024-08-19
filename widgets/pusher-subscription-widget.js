@@ -81,6 +81,10 @@ export const pusherSubscriptionWidgetStyles = css`
     margin-top: 8px;
   }
 
+  [cursor]:has(> [hidden]) {
+    display: none;
+  }
+
   .clickable {
     cursor: pointer;
   }
