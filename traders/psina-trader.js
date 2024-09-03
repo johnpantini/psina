@@ -326,9 +326,13 @@ class PsinaTrader extends Trader {
                   doNotSaveValue: payload.oid === '@CLEAR'
                 });
               } else if (payload.T === 'o') {
-                this.datums[TRADER_DATUM.ACTIVE_ORDER].dataArrived(payload);
+                this.datums[TRADER_DATUM.ACTIVE_ORDER].dataArrived(payload, {
+                  doNotSaveValue: payload.oid === '@CLEAR'
+                });
               } else if (payload.T === 't') {
-                this.datums[TRADER_DATUM.TIMELINE_ITEM].dataArrived(payload);
+                this.datums[TRADER_DATUM.TIMELINE_ITEM].dataArrived(payload, {
+                  doNotSaveValue: payload.oid === '@CLEAR'
+                });
               } else if (payload.T === 'error') {
                 if (payload.code === 407) {
                   continue;
