@@ -72,7 +72,7 @@ export class PositionsDatum extends PsinaTraderGlobalDatum {
     } else {
       if (data.oid === '@CLEAR') {
         return {
-          oid: data.oid,
+          operationId: data.oid,
           instrument: null
         };
       }
