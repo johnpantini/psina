@@ -22,7 +22,7 @@ export class PsinaTraderGlobalDatum extends GlobalTraderDatum {
 
 export class PositionsDatum extends PsinaTraderGlobalDatum {
   firstReferenceAdded() {
-    if (this.trader.connection.readyState === WebSocket.OPEN) {
+    if (this.trader.connection?.readyState === WebSocket.OPEN) {
       this.trader.connection.send(
         JSON.stringify({ action: 'subscribe', positions: true, balances: true })
       );
@@ -30,7 +30,7 @@ export class PositionsDatum extends PsinaTraderGlobalDatum {
   }
 
   async lastReferenceRemoved(source, symbol) {
-    if (this.trader.connection.readyState === WebSocket.OPEN) {
+    if (this.trader.connection?.readyState === WebSocket.OPEN) {
       this.trader.connection.send(
         JSON.stringify({
           action: 'unsubscribe',
@@ -42,7 +42,7 @@ export class PositionsDatum extends PsinaTraderGlobalDatum {
   }
 
   valueKeyForData(data) {
-    // May be @CLEAR.
+    // oid can be @CLEAR.
     return data.S ?? data.oid;
   }
 
@@ -108,7 +108,7 @@ export class PositionsDatum extends PsinaTraderGlobalDatum {
 
 export class TimelineDatum extends PsinaTraderGlobalDatum {
   firstReferenceAdded() {
-    if (this.trader.connection.readyState === WebSocket.OPEN) {
+    if (this.trader.connection?.readyState === WebSocket.OPEN) {
       this.trader.connection.send(
         JSON.stringify({ action: 'subscribe', timeline: true })
       );
@@ -116,7 +116,7 @@ export class TimelineDatum extends PsinaTraderGlobalDatum {
   }
 
   async lastReferenceRemoved(source, symbol) {
-    if (this.trader.connection.readyState === WebSocket.OPEN) {
+    if (this.trader.connection?.readyState === WebSocket.OPEN) {
       this.trader.connection.send(
         JSON.stringify({ action: 'unsubscribe', timeline: true })
       );
@@ -124,6 +124,10 @@ export class TimelineDatum extends PsinaTraderGlobalDatum {
   }
 
   valueKeyForData(data) {
+    if (data.oid === '@CLEAR') {
+      return data.oid;
+    }
+
     return `${data.oid}|${data.pid}`;
   }
 
@@ -146,7 +150,7 @@ export class TimelineDatum extends PsinaTraderGlobalDatum {
 
 export class ActiveOrderDatum extends PsinaTraderGlobalDatum {
   firstReferenceAdded() {
-    if (this.trader.connection.readyState === WebSocket.OPEN) {
+    if (this.trader.connection?.readyState === WebSocket.OPEN) {
       this.trader.connection.send(
         JSON.stringify({ action: 'subscribe', orders: true })
       );
@@ -154,7 +158,7 @@ export class ActiveOrderDatum extends PsinaTraderGlobalDatum {
   }
 
   async lastReferenceRemoved(source, symbol) {
-    if (this.trader.connection.readyState === WebSocket.OPEN) {
+    if (this.trader.connection?.readyState === WebSocket.OPEN) {
       this.trader.connection.send(
         JSON.stringify({ action: 'unsubscribe', orders: true })
       );
@@ -162,6 +166,7 @@ export class ActiveOrderDatum extends PsinaTraderGlobalDatum {
   }
 
   valueKeyForData(data) {
+    // Can be @CLEAR as well.
     return data.oid;
   }
 
@@ -183,7 +188,7 @@ export class ActiveOrderDatum extends PsinaTraderGlobalDatum {
 
 export class SprintDatum extends PsinaTraderGlobalDatum {
   firstReferenceAdded() {
-    if (this.trader.connection.readyState === WebSocket.OPEN) {
+    if (this.trader.connection?.readyState === WebSocket.OPEN) {
       this.trader.connection.send(
         JSON.stringify({ action: 'subscribe', sprint: true })
       );
@@ -191,7 +196,7 @@ export class SprintDatum extends PsinaTraderGlobalDatum {
   }
 
   async lastReferenceRemoved(source, symbol) {
-    if (this.trader.connection.readyState === WebSocket.OPEN) {
+    if (this.trader.connection?.readyState === WebSocket.OPEN) {
       this.trader.connection.send(
         JSON.stringify({ action: 'unsubscribe', sprint: true })
       );
@@ -243,6 +248,11 @@ class PsinaTrader extends Trader {
     ]);
   }
 
+  async oneTimeInitializationCallback() {
+    this.$$debug ??= globalThis.ppp.$debug(this.document._id);
+    this.$$connection = this.$$debug.extend('connection');
+  }
+
   async establishWebSocketConnection(reconnect) {
     if (this.connection?.readyState === WebSocket.OPEN && this.authenticated) {
       this.#pendingConnection = void 0;
@@ -251,119 +261,122 @@ class PsinaTrader extends Trader {
     } else if (this.#pendingConnection) {
       return this.#pendingConnection;
     } else {
-      return (this.#pendingConnection = new Promise((resolve, reject) => {
-        if (!reconnect && this.connection) {
-          resolve(this.connection);
-        } else {
+      this.#pendingConnection = new Promise((resolve, reject) => {
+        this.authenticated = false;
+        this.connection = new WebSocket(this.document.wsUrl);
+
+        this.connection.onclose = async () => {
           this.authenticated = false;
-          this.connection = new WebSocket(this.document.wsUrl);
+          this.connection.onclose = null;
+          this.connection.onerror = null;
+          this.connection.onmessage = null;
 
-          this.connection.onclose = async () => {
-            this.authenticated = false;
-            this.connection.onopen = null;
-            this.connection.onclose = null;
-            this.connection.onerror = null;
-            this.connection.onmessage = null;
+          await later(1000);
 
-            await later(1000);
+          this.#pendingConnection = void 0;
 
-            this.#pendingConnection = void 0;
+          await this.establishWebSocketConnection(true);
+        };
 
-            await this.establishWebSocketConnection(true);
-          };
+        this.connection.onerror = () => this.connection.close();
 
-          this.connection.onerror = () => this.connection.close();
+        this.connection.onmessage = async ({ data }) => {
+          const parsed = JSON.parse(data) ?? [];
 
-          this.connection.onmessage = async ({ data }) => {
-            const parsed = JSON.parse(data) ?? [];
+          // Clear active orders on every pack.
+          if (parsed.length && parsed[0].T === 'o') {
+            this.datums[TRADER_DATUM.ACTIVE_ORDER].value.clear();
+            this.datums[TRADER_DATUM.ACTIVE_ORDER].dataArrived({
+              T: 'o',
+              oid: '@CLEAR'
+            });
+          }
 
-            // Clear active orders on every pack.
-            if (parsed.length && parsed[0].T === 'o') {
-              this.datums[TRADER_DATUM.ACTIVE_ORDER].value.clear();
-              this.datums[TRADER_DATUM.ACTIVE_ORDER].dataArrived({
-                T: 'o',
-                oid: '@CLEAR'
+          for (const payload of parsed) {
+            if (payload.msg === 'connected') {
+              this.connection.send(
+                JSON.stringify({
+                  action: 'auth',
+                  key: this.document.broker.login,
+                  secret: this.document.broker.password
+                })
+              );
+
+              break;
+            } else if (payload.msg === 'authenticated') {
+              this.authenticated = true;
+              this.#pendingConnection = void 0;
+
+              if (reconnect) {
+                await this.resubscribe();
+              }
+
+              resolve(this.connection);
+
+              break;
+            } else if (payload.T === 's') {
+              this.datums[TRADER_DATUM.SPRINT].dataArrived(payload);
+            } else if (payload.T === 'b') {
+              for (const currency in payload.b) {
+                this.datums[TRADER_DATUM.POSITION].dataArrived({
+                  T: 'b',
+                  S: currency,
+                  p: payload.b[currency],
+                  isBalance: true
+                });
+              }
+            } else if (payload.T === 'p') {
+              payload.isBalance = false;
+
+              this.datums[TRADER_DATUM.POSITION].dataArrived(payload, {
+                doNotSaveValue: payload.oid === '@CLEAR'
               });
-            }
+            } else if (payload.T === 'o') {
+              this.datums[TRADER_DATUM.ACTIVE_ORDER].dataArrived(payload, {
+                doNotSaveValue: payload.oid === '@CLEAR'
+              });
+            } else if (payload.T === 't') {
+              this.datums[TRADER_DATUM.TIMELINE_ITEM].dataArrived(payload, {
+                doNotSaveValue: payload.oid === '@CLEAR'
+              });
+            } else if (payload.T === 'error') {
+              if (payload.code === 407) {
+                continue;
+              } else if (
+                payload.code === 403 &&
+                payload.msg === 'not ready yet'
+              ) {
+                // Restart silently.
+                this.connection.close();
+              } else if (payload.code === 406) {
+                this.authenticated = false;
+                this.connection.onclose = null;
 
-            for (const payload of parsed) {
-              if (payload.msg === 'connected') {
-                this.connection.send(
-                  JSON.stringify({
-                    action: 'auth',
-                    key: this.document.broker.login,
-                    secret: this.document.broker.password
-                  })
-                );
+                reject(new ConnectionLimitExceededError({ details: payload }));
 
                 break;
-              } else if (payload.msg === 'authenticated') {
-                this.authenticated = true;
-                this.#pendingConnection = void 0;
+              } else {
+                this.authenticated = false;
+                this.connection.onclose = null;
 
-                if (reconnect) {
-                  await this.resubscribe();
-                }
-
-                resolve(this.connection);
+                reject(new AuthorizationError({ details: payload }));
 
                 break;
-              } else if (payload.T === 's') {
-                this.datums[TRADER_DATUM.SPRINT].dataArrived(payload);
-              } else if (payload.T === 'b') {
-                for (const currency in payload.b) {
-                  this.datums[TRADER_DATUM.POSITION].dataArrived({
-                    T: 'b',
-                    S: currency,
-                    p: payload.b[currency],
-                    isBalance: true
-                  });
-                }
-              } else if (payload.T === 'p') {
-                payload.isBalance = false;
-
-                this.datums[TRADER_DATUM.POSITION].dataArrived(payload, {
-                  doNotSaveValue: payload.oid === '@CLEAR'
-                });
-              } else if (payload.T === 'o') {
-                this.datums[TRADER_DATUM.ACTIVE_ORDER].dataArrived(payload, {
-                  doNotSaveValue: payload.oid === '@CLEAR'
-                });
-              } else if (payload.T === 't') {
-                this.datums[TRADER_DATUM.TIMELINE_ITEM].dataArrived(payload, {
-                  doNotSaveValue: payload.oid === '@CLEAR'
-                });
-              } else if (payload.T === 'error') {
-                if (payload.code === 407) {
-                  continue;
-                } else if (
-                  payload.code === 403 &&
-                  payload.msg === 'not ready yet'
-                ) {
-                  // Restart silently.
-                  this.connection.close();
-                } else if (payload.code === 406) {
-                  this.authenticated = false;
-                  this.connection.onclose = null;
-
-                  reject(
-                    new ConnectionLimitExceededError({ details: payload })
-                  );
-
-                  break;
-                } else {
-                  this.authenticated = false;
-                  this.connection.onclose = null;
-
-                  reject(new AuthorizationError({ details: payload }));
-
-                  break;
-                }
               }
             }
-          };
-        }
-      }));
+          }
+        };
+      });
+
+      this.#pendingConnection.then(() => {
+        this.$$connection(
+          'connection was established and this.#pendingConnection is now void 0'
+        );
+
+        this.#pendingConnection = void 0;
+      });
+
+      return this.#pendingConnection;
     }
   }
 
