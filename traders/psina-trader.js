@@ -248,11 +248,6 @@ class PsinaTrader extends Trader {
     ]);
   }
 
-  async oneTimeInitializationCallback() {
-    this.$$debug ??= globalThis.ppp.$debug(this.document._id);
-    this.$$connection = this.$$debug.extend('connection');
-  }
-
   async establishWebSocketConnection(reconnect) {
     if (this.connection?.readyState === WebSocket.OPEN && this.authenticated) {
       this.#pendingConnection = void 0;

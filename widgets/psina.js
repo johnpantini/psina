@@ -686,6 +686,11 @@ export class PsinaWidget extends Widget {
 
       this.initialBalances.push(['USD', 0]);
       this.pnl.push(['USD', 0]);
+    } else if (port.endsWith('007')) {
+      this.sprintApplication = 'SPRINT_STOCKS_API';
+
+      this.initialBalances.push(['USD', 0]);
+      this.pnl.push(['USD', 0]);
     }
 
     try {
@@ -856,8 +861,20 @@ export class PsinaWidget extends Widget {
               balanceCorrection += positionAmount;
 
               // Fees.
-              if (this.sprintApplication == 'SPRINT_PAPER_TRADE') {
-                balanceCorrection -= size * 0.00331;
+              if (
+                this.sprintApplication == 'SPRINT_PAPER_TRADE' ||
+                this.sprintApplication == 'SPRINT_STOCKS_API'
+              ) {
+                let fee = Math.abs(size * 0.00324);
+
+                if (size > 0) {
+                  fee =
+                    size * 0.00324 +
+                    Math.trunc(price * size) * 0.0000278 +
+                    Math.min(size * 0.000145, 7.27);
+                }
+
+                balanceCorrection -= fee;
               }
             }
           }
@@ -871,7 +888,10 @@ export class PsinaWidget extends Widget {
     }
 
     if (!this.pnl.length) {
-      if (this.sprintApplication === 'SPRINT_PAPER_TRADE') {
+      if (
+        this.sprintApplication === 'SPRINT_PAPER_TRADE' ||
+        this.sprintApplication === 'SPRINT_STOCKS_API'
+      ) {
         this.pnl.push(['USD', 0]);
       }
     }
