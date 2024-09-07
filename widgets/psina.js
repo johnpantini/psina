@@ -96,7 +96,9 @@ export const psinaWidgetTemplate = html`
         ${when(
           (x) => !x?.loading && x?.initialized && x?.sprintTrader && !x?.sprint,
           html`${html.partial(
-            widgetEmptyStateTemplate('Ожидайте начало следующего спринта.')
+            widgetEmptyStateTemplate(
+              'Здесь появится информация о спринте, когда он станет доступен.'
+            )
           )}`
         )}
         ${when(
