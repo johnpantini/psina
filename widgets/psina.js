@@ -870,10 +870,7 @@ export class PsinaWidget extends Widget {
                 let fee = Math.abs(size * 0.00324);
 
                 if (size > 0) {
-                  fee =
-                    size * 0.00324 +
-                    Math.trunc(price * size) * 0.0000278 +
-                    Math.min(size * 0.000145, 7.27);
+                  fee = size * 0.00324 + Math.min(size * 0.000145, 7.27);
                 }
 
                 balanceCorrection -= fee;
