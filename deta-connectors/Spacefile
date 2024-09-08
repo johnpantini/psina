@@ -1,9 +1,0 @@
-v: 0
-micros:
-  - name: deta-connectors
-    src: /
-    engine: nodejs16
-    dev: nodemon deta-connectors.js
-    run: "node deta-connectors.js"
-    primary: true
-    public: true

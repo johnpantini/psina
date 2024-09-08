@@ -146,7 +146,7 @@ const server = http
             ok: true,
             result: {
               env: {
-                PPP_WORKER_ID: 'deta-connectors'
+                PPP_WORKER_ID: 'PSINA_PUBLIC_TOOLKIT'
               }
             }
           })
@@ -160,8 +160,4 @@ const server = http
         response.writeHead(404).end();
     }
   })
-  .listen(process.env.PORT ?? 9998, () => {
-    console.log(
-      '[deta-connectors.js] Listening to port ' + server.address().port
-    );
-  });
+  .listen(process.env.PORT ?? 9998);
