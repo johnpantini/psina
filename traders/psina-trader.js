@@ -250,10 +250,8 @@ class PsinaTrader extends Trader {
 
   async establishWebSocketConnection(reconnect) {
     if (this.connection?.readyState === WebSocket.OPEN && this.authenticated) {
-      this.#pendingConnection = void 0;
-
       return this.connection;
-    } else if (this.#pendingConnection) {
+    } else if (this.#pendingConnection && !reconnect) {
       return this.#pendingConnection;
     } else {
       this.#pendingConnection = new Promise((resolve, reject) => {
@@ -261,16 +259,8 @@ class PsinaTrader extends Trader {
         this.connection = new WebSocket(this.document.wsUrl);
 
         this.connection.onclose = async () => {
-          this.authenticated = false;
-          this.connection.onclose = null;
-          this.connection.onerror = null;
-          this.connection.onmessage = null;
-
           await later(1000);
-
-          this.#pendingConnection = void 0;
-
-          await this.establishWebSocketConnection(true);
+          resolve(this.establishWebSocketConnection(true));
         };
 
         this.connection.onerror = () => this.connection.close();
@@ -361,14 +351,6 @@ class PsinaTrader extends Trader {
             }
           }
         };
-      });
-
-      this.#pendingConnection.then(() => {
-        this.$$connection(
-          'connection was established and this.#pendingConnection is now void 0'
-        );
-
-        this.#pendingConnection = void 0;
       });
 
       return this.#pendingConnection;
