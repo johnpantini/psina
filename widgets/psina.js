@@ -1029,6 +1029,12 @@ export async function widgetDefinition({ baseWidgetUrl }) {
             value="${(x) => x.document.level1TraderId}"
             :context="${(x) => x}"
             :preloaded="${(x) => x.document.level1Trader ?? ''}"
+            :displayValueFormatter="${() => (item) =>
+              html`
+                <span style="color:${getTraderSelectOptionColor(item)}">
+                  ${item?.name}
+                </span>
+              `}"
             :query="${() => {
               return (context) => {
                 return context.services
