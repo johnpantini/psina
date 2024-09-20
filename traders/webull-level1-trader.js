@@ -10,10 +10,6 @@ const [
   import(`${ppp.rootUrl}/elements/pages/service-ppp-aspirant-worker.js`)
 ]);
 
-window.addEventListener('message', (e) => {
-  console.log(e);
-});
-
 let isCORSEnabled = false;
 
 try {
@@ -205,7 +201,7 @@ export class Level1Datum extends TraderDatum {
             : 5000
         );
       } catch (e) {
-        console.error(e);
+        this.trader.$$debug('#fetchLoop failed: %o', e);
 
         this.#timer = setTimeout(
           () => {
