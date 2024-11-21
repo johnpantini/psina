@@ -148,7 +148,7 @@ export class TimelineDatum extends PsinaTraderGlobalDatum {
   }
 }
 
-export class ActiveOrderDatum extends PsinaTraderGlobalDatum {
+export class RealOrderDatum extends PsinaTraderGlobalDatum {
   firstReferenceAdded() {
     if (this.trader.connection?.readyState === WebSocket.OPEN) {
       this.trader.connection.send(
@@ -170,7 +170,7 @@ export class ActiveOrderDatum extends PsinaTraderGlobalDatum {
     return data.oid;
   }
 
-  [TRADER_DATUM.ACTIVE_ORDER](data) {
+  [TRADER_DATUM.REAL_ORDER](data) {
     return {
       instrument: this.trader.instruments.get(data.S),
       symbol: data.S,
@@ -234,8 +234,8 @@ class PsinaTrader extends Trader {
         datums: [TRADER_DATUM.TIMELINE_ITEM]
       },
       {
-        type: ActiveOrderDatum,
-        datums: [TRADER_DATUM.ACTIVE_ORDER]
+        type: RealOrderDatum,
+        datums: [TRADER_DATUM.REAL_ORDER]
       },
       {
         type: SprintDatum,
@@ -270,8 +270,8 @@ class PsinaTrader extends Trader {
 
           // Clear active orders on every pack.
           if (parsed.length && parsed[0].T === 'o') {
-            this.datums[TRADER_DATUM.ACTIVE_ORDER].value.clear();
-            this.datums[TRADER_DATUM.ACTIVE_ORDER].dataArrived({
+            this.datums[TRADER_DATUM.REAL_ORDER].value.clear();
+            this.datums[TRADER_DATUM.REAL_ORDER].dataArrived({
               T: 'o',
               oid: '@CLEAR'
             });
@@ -317,7 +317,7 @@ class PsinaTrader extends Trader {
                 doNotSaveValue: payload.oid === '@CLEAR'
               });
             } else if (payload.T === 'o') {
-              this.datums[TRADER_DATUM.ACTIVE_ORDER].dataArrived(payload, {
+              this.datums[TRADER_DATUM.REAL_ORDER].dataArrived(payload, {
                 doNotSaveValue: payload.oid === '@CLEAR'
               });
             } else if (payload.T === 't') {
