@@ -4,7 +4,6 @@ const [
   {
     Widget,
     widgetStyles,
-    widgetEmptyStateTemplate,
     widgetDefaultHeaderTemplate,
     widgetStackSelectorTemplate
   },
@@ -79,28 +78,25 @@ export const psinaWidgetTemplate = html`
       ${widgetDefaultHeaderTemplate()}
       <div class="widget-body">
         ${widgetStackSelectorTemplate()}
-        ${when(
-          (x) => x?.loading || !x?.initialized,
-          html`${html.partial(
-            widgetEmptyStateTemplate(ppp.t('$widget.emptyState.loading'), {
-              extraClass: 'loading-animation'
-            })
-          )}`
-        )}
-        ${when(
-          (x) => !x?.loading && x?.initialized && !x?.sprintTrader,
-          html`${html.partial(
-            widgetEmptyStateTemplate('Трейдер не задан в настройках.')
-          )}`
-        )}
-        ${when(
-          (x) => !x?.loading && x?.initialized && x?.sprintTrader && !x?.sprint,
-          html`${html.partial(
-            widgetEmptyStateTemplate(
-              'Здесь появится информация о спринте, когда он станет доступен.'
-            )
-          )}`
-        )}
+        <ppp-widget-empty-state-control
+          loading
+          ?hidden="${(x) => !(x?.loading || !x?.initialized)}"
+        >
+          ${() => ppp.t('$widget.emptyState.loading')}
+        </ppp-widget-empty-state-control>
+        <ppp-widget-empty-state-control
+          ?hidden="${(x) =>
+            !(!x?.loading && x?.initialized && !x?.sprintTrader)}"
+        >
+          ${() => 'Трейдер не задан в настройках.'}
+        </ppp-widget-empty-state-control>
+        <ppp-widget-empty-state-control
+          ?hidden="${(x) =>
+            !(!x?.loading && x?.initialized && x?.sprintTrader && !x?.sprint)}"
+        >
+          ${() =>
+            'Здесь появится информация о спринте, когда он станет доступен.'}
+        </ppp-widget-empty-state-control>
         ${when(
           (x) => !x?.loading && x?.initialized && x?.sprintTrader && x?.sprint,
           html`

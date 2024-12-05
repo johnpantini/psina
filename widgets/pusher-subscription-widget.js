@@ -4,11 +4,10 @@ const [
   {
     WidgetWithInstrument,
     widgetStyles,
-    widgetEmptyStateTemplate,
     widgetDefaultHeaderTemplate,
     widgetStackSelectorTemplate
   },
-  { Observable, observable, css, html, ref, when, repeat },
+  { Observable, observable, css, html, ref, repeat },
   { Tmpl },
   { validate },
   { WIDGET_TYPES },
@@ -42,23 +41,18 @@ export const pusherSubscriptionWidgetTemplate = html`
       ${widgetDefaultHeaderTemplate()}
       <div class="widget-body">
         ${widgetStackSelectorTemplate()}
-        ${when(
-          (x) => !x.initialized,
-          html`${html.partial(
-            widgetEmptyStateTemplate(ppp.t('$widget.emptyState.loading'), {
-              extraClass: 'loading-animation'
-            })
-          )}`
-        )}
+        <ppp-widget-empty-state-control
+          loading
+          ?hidden="${(x) => x.initialized}"
+        >
+          ${() => ppp.t('$widget.emptyState.loading')}
+        </ppp-widget-empty-state-control>
         <div class="widget-card-list" ?hidden="${(x) => !x.initialized}">
-          ${when(
-            (x) => !x?.messages?.length,
-            html`${html.partial(
-              widgetEmptyStateTemplate(
-                ppp.t('$widget.emptyState.noDataToDisplay')
-              )
-            )}`
-          )}
+          <ppp-widget-empty-state-control
+            ?hidden="${(x) => x?.messages?.length}"
+          >
+            ${() => ppp.t('$widget.emptyState.noDataToDisplay')}
+          </ppp-widget-empty-state-control>
           <div class="widget-card-list-inner" ${ref('cardList')}>
             ${repeat(
               (x) => x?.messages.slice(0, x.document.depth ?? 50),
