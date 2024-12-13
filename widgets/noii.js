@@ -5,7 +5,7 @@ const [
     WidgetWithInstrument,
     widgetStyles,
     widgetDefaultHeaderTemplate,
-    widgetWithInstrumentBodyTemplate,
+    widgetDefaultEmptyStateTemplate,
     widgetStackSelectorTemplate
   },
   { css, html, ref, observable, attr },
@@ -47,7 +47,7 @@ export const noiiWidgetTemplate = html`
       ${widgetDefaultHeaderTemplate()}
       <div class="widget-body">
         ${widgetStackSelectorTemplate()}
-        ${widgetWithInstrumentBodyTemplate(html`
+        <div ?hidden="${(x) => !x.mayShowContent}">
           <div class="controls">
             <div class="tabs">
               <ppp-widget-box-radio-group
@@ -120,7 +120,8 @@ export const noiiWidgetTemplate = html`
               </div>
             </div>
           </div>
-        `)}
+        </div>
+        ${widgetDefaultEmptyStateTemplate()}
       </div>
       <ppp-widget-notifications-area></ppp-widget-notifications-area>
       <ppp-widget-resize-controls></ppp-widget-resize-controls>

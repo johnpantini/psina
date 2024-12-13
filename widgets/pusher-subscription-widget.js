@@ -11,7 +11,7 @@ const [
   { Tmpl },
   { validate },
   { WIDGET_TYPES },
-  { normalize, typography, scrollbars }
+  { normalize, typography, scrollbars, getTraderSelectOptionColor }
 ] = await Promise.all([
   import(`${ppp.rootUrl}/elements/widget.js`),
   import(`${ppp.rootUrl}/vendor/fast-element.min.js`),
@@ -56,7 +56,7 @@ export const pusherSubscriptionWidgetTemplate = html`
           <div class="widget-card-list-inner" ${ref('cardList')}>
             ${repeat(
               (x) => x?.messages.slice(0, x.document.depth ?? 50),
-              html` <div cursor="${(x) => x.cursor}">${(x) => x.layout}</div>`
+              html`<div cursor="${(x) => x.cursor}">${(x) => x.layout}</div>`
             )}
           </div>
         </div>
@@ -450,6 +450,12 @@ export async function widgetDefinition({ baseWidgetUrl }) {
                 value="${(x) => x.document.instrumentTraderId}"
                 :context="${(x) => x}"
                 :preloaded="${(x) => x.document.instrumentTrader ?? ''}"
+                :displayValueFormatter="${() => (item) =>
+                  html`
+                    <span style="color:${getTraderSelectOptionColor(item)}">
+                      ${item?.name}
+                    </span>
+                  `}"
                 :query="${() => {
                   return (context) => {
                     return context.services

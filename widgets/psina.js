@@ -85,14 +85,24 @@ export const psinaWidgetTemplate = html`
           ${() => ppp.t('$widget.emptyState.loading')}
         </ppp-widget-empty-state-control>
         <ppp-widget-empty-state-control
-          ?hidden="${(x) =>
-            !(!x?.loading && x?.initialized && !x?.sprintTrader)}"
+          ?hidden="${(x) => {
+            if (x?.loading || !x?.initialized) {
+              return true;
+            } else {
+              return x?.sprintTrader;
+            }
+          }}"
         >
-          ${() => 'Трейдер не задан в настройках.'}
+          ${() => 'Трейдер спринта не задан в настройках.'}
         </ppp-widget-empty-state-control>
         <ppp-widget-empty-state-control
-          ?hidden="${(x) =>
-            !(!x?.loading && x?.initialized && x?.sprintTrader && !x?.sprint)}"
+          ?hidden="${(x) => {
+            if (x?.loading || !x?.initialized || !x?.sprintTrader) {
+              return true;
+            }
+
+            return x?.sprint;
+          }}"
         >
           ${() =>
             'Здесь появится информация о спринте, когда он станет доступен.'}
