@@ -18,6 +18,7 @@ const [
   },
   { WIDGET_TYPES, TRADER_DATUM, COLUMN_SOURCE },
   { later },
+  { validate, invalidate },
   { uuidv4 },
   { normalize, typography, getTraderSelectOptionColor }
 ] = await Promise.all([
@@ -27,6 +28,7 @@ const [
   import(`${ppp.rootUrl}/lib/intl.js`),
   import(`${ppp.rootUrl}/lib/const.js`),
   import(`${ppp.rootUrl}/lib/ppp-decorators.js`),
+  import(`${ppp.rootUrl}/lib/ppp-errors.js`),
   import(`${ppp.rootUrl}/lib/ppp-crypto.js`),
   import(`${ppp.rootUrl}/design/styles.js`),
   import(`${ppp.rootUrl}/elements/banner.js`),
@@ -232,19 +234,6 @@ export const psinaWidgetTemplate = html`
                         </div>
                         <div class="widget-summary-line">
                           <div class="control-line">
-                            <span>Бонусный баланс</span>
-                          </div>
-                          <span>
-                            <span>
-                              ${(x) =>
-                                formatAmount(x.sprint.bb, {
-                                  currency: 'USD'
-                                })}
-                            </span>
-                          </span>
-                        </div>
-                        <div class="widget-summary-line">
-                          <div class="control-line">
                             <span>Моя доля</span>
                           </div>
                           <span>
@@ -437,65 +426,18 @@ export const psinaWidgetTemplate = html`
                   <div class="widget-margin-spacer"></div>
                   <div class="widget-section">
                     <div class="widget-section-h1">
-                      <span>Счета криптобирж</span>
+                      <span>Адреса для вывода</span>
                     </div>
                   </div>
                   <div class="widget-section">
-                    <div class="widget-text-label">Binance</div>
+                    <div class="widget-text-label">
+                      USDC в блокчейне Solana (SOL)
+                    </div>
                     <ppp-widget-text-field
-                      type="number"
                       autocomplete="off"
-                      placeholder="Нет"
-                      value=${(x) => x.sprint?.cr?.bn || ''}
-                      ${ref('binance')}
-                    >
-                    </ppp-widget-text-field>
-                  </div>
-                  <div class="widget-margin-spacer"></div>
-                  <div class="widget-section">
-                    <div class="widget-text-label">Bybit</div>
-                    <ppp-widget-text-field
-                      type="number"
-                      autocomplete="off"
-                      placeholder="Нет"
-                      value=${(x) => x.sprint?.cr?.by || ''}
-                      ${ref('bybit')}
-                    >
-                    </ppp-widget-text-field>
-                  </div>
-                  <div class="widget-margin-spacer"></div>
-                  <div class="widget-section">
-                    <div class="widget-text-label">OKX</div>
-                    <ppp-widget-text-field
-                      type="number"
-                      autocomplete="off"
-                      placeholder="Нет"
-                      value=${(x) => x.sprint?.cr?.okx || ''}
-                      ${ref('okx')}
-                    >
-                    </ppp-widget-text-field>
-                  </div>
-                  <div class="widget-margin-spacer"></div>
-                  <div class="widget-section">
-                    <div class="widget-text-label">KuCoin</div>
-                    <ppp-widget-text-field
-                      type="number"
-                      autocomplete="off"
-                      placeholder="Нет"
-                      value=${(x) => x.sprint?.cr?.ku || ''}
-                      ${ref('kucoin')}
-                    >
-                    </ppp-widget-text-field>
-                  </div>
-                  <div class="widget-margin-spacer"></div>
-                  <div class="widget-section">
-                    <div class="widget-text-label">MEXC</div>
-                    <ppp-widget-text-field
-                      type="number"
-                      autocomplete="off"
-                      placeholder="Нет"
-                      value=${(x) => x.sprint?.cr?.mxc || ''}
-                      ${ref('mexc')}
+                      placeholder="Не указан"
+                      value=${(x) => x.sprint?.cr?.sol || ''}
+                      ${ref('sol')}
                     >
                     </ppp-widget-text-field>
                   </div>
@@ -505,17 +447,16 @@ export const psinaWidgetTemplate = html`
                       <div class="widget-button-line">
                         <ppp-widget-button
                           appearance="primary"
-                          @click="${(x) =>
-                            x.setCEXForWithdrawal({
-                              binance: x.binance.value,
-                              bybit: x.bybit.value,
-                              okx: x.okx.value,
-                              kucoin: x.kucoin.value,
-                              mexc: x.mexc.value
-                            })}"
-                          ${ref('cexButton')}
+                          @click="${async (x) => {
+                            await validate(x.sol);
+
+                            x.setAddrForWithdrawal({
+                              sol: x.sol.value
+                            });
+                          }}"
+                          ${ref('addrButton')}
                         >
-                          Сохранить счета
+                          Сохранить адреса
                         </ppp-widget-button>
                       </div>
                     </div>
@@ -667,6 +608,19 @@ export class PsinaWidget extends Widget {
     return this.recalcPersonalPnL();
   }
 
+  @observable
+  traderEvent;
+
+  traderEventChanged(oldValue, event) {
+    if (event?.event === 'error') {
+      if (event.details.msg === 'invalid USDC Solana address') {
+        invalidate(this.sol, {
+          errorMessage: 'Неверный адрес Solana'
+        });
+      }
+    }
+  }
+
   constructor() {
     super();
 
@@ -710,7 +664,8 @@ export class PsinaWidget extends Widget {
         source: this,
         fieldDatumPairs: {
           sprint: TRADER_DATUM.SPRINT,
-          position: TRADER_DATUM.POSITION
+          position: TRADER_DATUM.POSITION,
+          traderEvent: TRADER_DATUM.TRADER
         }
       });
 
@@ -750,7 +705,8 @@ export class PsinaWidget extends Widget {
         source: this,
         fieldDatumPairs: {
           sprint: TRADER_DATUM.SPRINT,
-          position: TRADER_DATUM.POSITION
+          position: TRADER_DATUM.POSITION,
+          traderEvent: TRADER_DATUM.TRADER
         }
       });
     }
@@ -805,6 +761,31 @@ export class PsinaWidget extends Widget {
     }
   }
 
+  async setAddrForWithdrawal(values) {
+    this.addrButton.setAttribute('disabled', '');
+
+    try {
+      for (const addr in values) {
+        values[addr] = (values[addr] ?? '').trim();
+      }
+
+      await later(500);
+      await this.sprintTrader.call({
+        method: 'setAddrForWithdrawal',
+        values
+      });
+
+      return this.notificationsArea.success({
+        title: 'Запрос отправлен'
+      });
+    } catch (e) {
+      return this.catchException(e);
+    } finally {
+      this.addrButton.removeAttribute('disabled');
+    }
+  }
+
+  // Unused.
   async setCEXForWithdrawal(values) {
     this.cexButton.setAttribute('disabled', '');
 
@@ -870,8 +851,8 @@ export class PsinaWidget extends Widget {
 
               // Fees.
               if (
-                this.sprintApplication == 'SPRINT_PAPER_TRADE' ||
-                this.sprintApplication == 'SPRINT_STOCKS_API'
+                this.sprintApplication === 'SPRINT_PAPER_TRADE' ||
+                this.sprintApplication === 'SPRINT_STOCKS_API'
               ) {
                 let fee = Math.abs(size * 0.00324);
 

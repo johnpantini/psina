@@ -325,8 +325,10 @@ class PsinaTrader extends Trader {
                 doNotSaveValue: payload.oid === '@CLEAR'
               });
             } else if (payload.T === 'error') {
-              if (payload.code === 407) {
-                continue;
+              if (payload.code === 407 || payload.code === 422) {
+                if (payload.code === 422) {
+                  this.traderEvent({ event: 'error', details: payload });
+                }
               } else if (
                 payload.code === 403 &&
                 payload.msg === 'not ready yet'
@@ -337,12 +339,20 @@ class PsinaTrader extends Trader {
                 this.authenticated = false;
                 this.connection.onclose = null;
 
+                if (this.connection?.readyState === WebSocket.OPEN) {
+                  this.connection.close();
+                }
+
                 reject(new ConnectionLimitExceededError({ details: payload }));
 
                 break;
               } else {
                 this.authenticated = false;
                 this.connection.onclose = null;
+
+                if (this.connection?.readyState === WebSocket.OPEN) {
+                  this.connection.close();
+                }
 
                 reject(new AuthorizationError({ details: payload }));
 
@@ -386,6 +396,19 @@ class PsinaTrader extends Trader {
     );
   }
 
+  async setAddrForWithdrawal(values) {
+    await this.establishWebSocketConnection();
+
+    return this.connection.send(
+      JSON.stringify({
+        action: 'fetch',
+        rid: uuidv4(),
+        method: 'setAddrForWithdrawal',
+        values
+      })
+    );
+  }
+
   async setCEXForWithdrawal(values) {
     await this.establishWebSocketConnection();
 
@@ -402,6 +425,8 @@ class PsinaTrader extends Trader {
   async call(data) {
     if (data.method === 'setPayout') {
       return this.setPayout(data.payout);
+    } else if (data.method === 'setAddrForWithdrawal') {
+      return this.setAddrForWithdrawal(data.values);
     } else if (data.method === 'setCEXForWithdrawal') {
       return this.setCEXForWithdrawal(data.values);
     }
