@@ -115,9 +115,7 @@ export class Level1Datum extends TraderDatum {
                 }
               }
 
-              if (!webullSearchResponse.ok) {
-                continue;
-              } else {
+              if (webullSearchResponse.ok) {
                 const data = await webullSearchResponse.json();
 
                 if (data?.data) {
